@@ -1,0 +1,51 @@
+---
+/**
+ * AdSense 광고 슬롯
+ *
+ * 사용법 (MDX 글 안에서):
+ *   import AdSlot from '../../components/AdSlot.astro';
+ *   <AdSlot />              ← 본문 중간 광고
+ *   <AdSlot slot="home" />  ← 홈용 슬롯
+ *
+ * 광고 ID가 없으면 운영 빌드에서는 아무것도 그리지 않고,
+ * 개발 모드(npm run dev)에서만 자리 표시 박스를 보여 줍니다.
+ */
+import { adsense } from '../config';
+
+interface Props {
+  slot?: 'article' | 'home';
+  label?: string;
+  class?: string;
+}
+
+const { slot = 'article', label = '광고', class: className = '' } = Astro.props;
+const slotId = adsense.slots[slot];
+const active = adsense.enabled && Boolean(slotId);
+const showPlaceholder = !active && adsense.showPlaceholders;
+---
+
+{
+  active ? (
+    <aside class={`ad-slot ${className}`} aria-label="광고">
+      <span class="ad-slot__label">{label}</span>
+      <ins
+        class="adsbygoogle"
+        style="display:block"
+        data-ad-client={adsense.client}
+        data-ad-slot={slotId}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+      <script is:inline>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </aside>
+  ) : showPlaceholder ? (
+    <aside class={`ad-slot ad-slot--placeholder ${className}`}>
+      <span>
+        광고 자리 (개발 모드 미리보기)
+        <br />
+        <code>PUBLIC_ADSENSE_CLIENT</code> + <code>PUBLIC_ADSENSE_SLOT_{slot.toUpperCase()}</code>
+        {' '}를 넣으면 실제 광고가 표시됩니다.
+      </span>
+    </aside>
+  ) : null
+}

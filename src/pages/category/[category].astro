@@ -1,0 +1,73 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { categories, site } from '../../config';
+import { formatDateShort, readingTime, withBase, asset } from '../../lib/site';
+import { getPublishedPosts, type Post } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return categories.map((category) => ({
+    params: { category: category.slug },
+    props: {
+      category,
+      posts: posts.filter((post) => post.data.category === category.slug),
+    },
+  }));
+}
+
+const { category, posts } = Astro.props as {
+  category: (typeof categories)[number];
+  posts: Post[];
+};
+
+const title = `${category.label} 글 모음`;
+---
+
+<BaseLayout title={title} description={`${category.label} — ${category.blurb}. 쿼구리 블로그의 ${category.label} 카테고리 글 ${posts.length}편.`}>
+  <div class="container">
+    <header class="page-head">
+      <p class="eyebrow">{category.emoji} category</p>
+      <h1 class="page-head__title">{category.label}</h1>
+      <p class="page-head__desc">{category.blurb}. 지금까지 {posts.length}편을 기록했어요.</p>
+      <div class="chip-row" style="margin-top:18px">
+        {
+          categories.map((item) => (
+            <a
+              class="chip"
+              href={withBase(`/category/${item.slug}/`)}
+              style={item.slug === category.slug ? 'background:var(--sage-soft);color:var(--sage);font-weight:700' : undefined}
+            >
+              {item.emoji} {item.short}
+            </a>
+          ))
+        }
+      </div>
+    </header>
+
+    {
+      posts.length > 0 ? (
+        <div class="list" style="padding-bottom:64px">
+          {posts.map((post) => (
+            <a class="list-item" href={withBase(`/posts/${post.id}/`)}>
+              <span class="list-item__media">
+                <img src={asset(post.data.cover)} alt="" width="280" height="210" loading="lazy" />
+              </span>
+              <div>
+                <span class="chip chip--category">{category.emoji} {category.short}</span>
+                <h2 class="list-item__title">{post.data.title}</h2>
+                <p class="list-item__desc">{post.data.description}</p>
+                <p class="list-item__meta">
+                  {formatDateShort(post.data.pubDate)} · {readingTime(post.body ?? '')}분 읽기
+                </p>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="search-empty" style="padding-bottom:64px">
+          아직 이 카테고리에 글이 없어요. 곧 채워 볼게요!
+        </p>
+      )
+    }
+  </div>
+</BaseLayout>

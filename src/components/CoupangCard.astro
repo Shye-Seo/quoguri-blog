@@ -1,0 +1,76 @@
+---
+/**
+ * 쿠팡 파트너스 상품 카드
+ *
+ * MDX 글에서 이렇게 씁니다.
+ *   import CoupangCard from '../../components/CoupangCard.astro';
+ *   <CoupangCard
+ *     name="상품 이름"
+ *     price={29900}
+ *     originalPrice={45000}
+ *     description="한 줄 설명"
+ *     image="/images/products/example.jpg"
+ *     url="https://link.coupang.com/a/xxxxx"   ← 파트너스에서 복사한 링크
+ *   />
+ *
+ * 공정위(추천·보증 심사지침) 문구는 카드 하단에 자동으로 들어갑니다.
+ */
+import { coupang } from '../config';
+import { asset } from '../lib/site';
+
+interface Props {
+  name: string;
+  price?: number | string;
+  originalPrice?: number | string;
+  description?: string;
+  image?: string;
+  url?: string;
+  badge?: string;
+  note?: string;
+}
+
+const { name, price, originalPrice, description, image, url, badge = '쿠팡 파트너스', note } = Astro.props;
+
+const won = (value?: number | string) => {
+  if (value === undefined || value === null || value === '') return '';
+  if (typeof value === 'number') return `${value.toLocaleString('ko-KR')}원`;
+  return value;
+};
+
+const priceText = won(price);
+const originalText = won(originalPrice);
+const hasLink = Boolean(url && url.startsWith('http'));
+const noteText = [note, coupang.disclosure].filter(Boolean).join(' ');
+---
+
+<aside class="coupang-card">
+  {
+    image ? (
+      <img class="coupang-card__thumb" src={asset(image)} alt={`${name} 상품 이미지`} width="88" height="88" loading="lazy" />
+    ) : (
+      <span class="coupang-card__thumb" aria-hidden="true" />
+    )
+  }
+  <div class="coupang-card__body">
+    <span class="coupang-card__badge">{badge}</span>
+    <span class="coupang-card__name">{name}</span>
+    {description && <span class="coupang-card__desc">{description}</span>}
+    {(priceText || originalText) && (
+      <span class="coupang-card__row">
+        {priceText && <span class="coupang-card__price">{priceText}</span>}
+        {originalText && <span class="coupang-card__was">{originalText}</span>}
+      </span>
+    )}
+    {
+      hasLink && (
+        <a class="coupang-card__cta" href={url} target="_blank" rel="nofollow sponsored noopener">
+          쿠팡에서 보기
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M7 17 17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
+      )
+    }
+  </div>
+  <p class="coupang-card__note">{noteText}</p>
+</aside>

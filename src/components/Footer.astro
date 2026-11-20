@@ -1,0 +1,103 @@
+---
+import { categories, coupang, site } from '../config';
+import { absoluteUrl, asset, basePath, withBase } from '../lib/site';
+
+const pathname = Astro.url.pathname;
+const currentPath = basePath && pathname.startsWith(basePath)
+  ? pathname.slice(basePath.length) || '/'
+  : pathname;
+const isActive = (href: string) => (href === '/' ? currentPath === '/' : currentPath.startsWith(href));
+const year = new Date().getFullYear();
+
+const socials = [
+  { href: site.socials.instagram, label: '인스타그램' },
+  { href: site.socials.youtube, label: '유튜브' },
+  { href: site.socials.naverBlog, label: '네이버 블로그' },
+  { href: site.socials.github, label: '깃허브' },
+].filter((item) => Boolean(item.href));
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <a class="brand" href={withBase('/')}>
+          <img class="brand__mark" src={asset('/images/quokka-avatar.jpg')} alt="" width="34" height="34" loading="lazy" />
+          <span class="brand__text">
+            <span class="brand__name">{site.name}</span>
+            <span class="brand__en">{site.nameEn}</span>
+          </span>
+        </a>
+        <p>{site.description}</p>
+        <p class="disclosure">{coupang.disclosure}</p>
+      </div>
+
+      <div>
+        <p class="site-footer__title">카테고리</p>
+        <div class="site-footer__links">
+          {
+            categories.map((category) => (
+              <a href={withBase(`/category/${category.slug}/`)}>
+                {category.emoji} {category.label}
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      <div>
+        <p class="site-footer__title">블로그</p>
+        <div class="site-footer__links">
+          <a href={withBase('/about/')}>쿼구리 소개</a>
+          <a href={withBase('/categories/')}>글 전체 보기</a>
+          <a href={withBase('/search/')}>글 검색</a>
+          <a href={withBase('/rss.xml')}>RSS 구독</a>
+          <a href={withBase('/privacy/')}>개인정보처리방침</a>
+          {site.contactEmail && <a href={`mailto:${site.contactEmail}`}>문의하기</a>}
+          {socials.map((social) => (
+            <a href={social.href} rel="me noopener" target="_blank">{social.label}</a>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <span>© {year} {site.name} ({site.nameEn}). All rights reserved.</span>
+      <span>
+        <a href={absoluteUrl('/rss.xml')}>RSS</a> · <a href={absoluteUrl('/sitemap-index.xml')}>Sitemap</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<nav class="mobile-tabs" aria-label="모바일 메뉴">
+  <a href={withBase('/')} aria-current={isActive('/') ? 'page' : undefined}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1Z" stroke-linejoin="round" />
+    </svg>
+    <span>홈</span>
+  </a>
+  <a href={withBase('/categories/')} aria-current={isActive('/categories') ? 'page' : undefined}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+    </svg>
+    <span>카테고리</span>
+  </a>
+  <a href={withBase('/search/')} aria-current={isActive('/search') ? 'page' : undefined}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" stroke-linecap="round" />
+    </svg>
+    <span>검색</span>
+  </a>
+  <a href={withBase('/about/')} aria-current={isActive('/about') ? 'page' : undefined}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.5M12 7.8v.2" stroke-linecap="round" />
+    </svg>
+    <span>소개</span>
+  </a>
+</nav>

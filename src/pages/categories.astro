@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { categories, site } from '../config';
+import { formatDateShort, readingTime, withBase, asset } from '../lib/site';
+import { categoryOf, countByCategory, getPublishedPosts } from '../lib/posts';
+
+const posts = await getPublishedPosts();
+const counts = await countByCategory();
+---
+
+<BaseLayout title="카테고리" description={`쿼구리 블로그의 모든 글 — ${posts.length}편을 카테고리별로 모았어요.`}>
+  <div class="container">
+    <header class="page-head">
+      <p class="eyebrow">archive</p>
+      <h1 class="page-head__title">카테고리</h1>
+      <p class="page-head__desc">테크·데스크테리어, 뷰티, 여행·디카, 일상 꿀팁 — 지금까지 {posts.length}편을 기록했어요.</p>
+    </header>
+
+    <section aria-label="카테고리 목록" style="margin-bottom:52px">
+      <div class="category-strip">
+        {
+          categories.map((category) => (
+            <a class="category-card" href={withBase(`/category/${category.slug}/`)}>
+              <span class="category-card__top">
+                <span class="category-card__emoji" aria-hidden="true">{category.emoji}</span>
+                <span class="category-card__count">{counts[category.slug]}편</span>
+              </span>
+              <span class="category-card__label">{category.label}</span>
+              <span class="category-card__blurb">{category.blurb}</span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="all-posts" style="padding-bottom:64px">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">all posts</p>
+          <h2 id="all-posts">전체 글</h2>
+        </div>
+      </div>
+      {
+        posts.length > 0 ? (
+          <div class="list">
+            {posts.map((post) => {
+              const category = categoryOf(post);
+              return (
+                <a class="list-item" href={withBase(`/posts/${post.id}/`)}>
+                  <span class="list-item__media">
+                    <img src={asset(post.data.cover)} alt="" width="280" height="210" loading="lazy" />
+                  </span>
+                  <div>
+                    <span class="chip chip--category">{category.emoji} {category.label}</span>
+                    <h3 class="list-item__title">{post.data.title}</h3>
+                    <p class="list-item__desc">{post.data.description}</p>
+                    <p class="list-item__meta">
+                      {formatDateShort(post.data.pubDate)} · {readingTime(post.body ?? '')}분 읽기
+                    </p>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        ) : (
+          <p class="search-empty">아직 올린 글이 없어요.</p>
+        )
+      }
+    </section>
+  </div>
+</BaseLayout>

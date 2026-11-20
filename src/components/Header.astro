@@ -1,0 +1,63 @@
+---
+import { nav, site } from '../config';
+import { asset, basePath, withBase } from '../lib/site';
+
+const pathname = Astro.url.pathname;
+const currentPath = basePath && pathname.startsWith(basePath)
+  ? pathname.slice(basePath.length) || '/'
+  : pathname;
+
+const isActive = (href: string) =>
+  href === '/' ? currentPath === '/' : currentPath.startsWith(href.replace(/\/$/, ''));
+---
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href={withBase('/')} aria-label={`${site.name} 홈으로`}>
+      <img
+        class="brand__mark"
+        src={asset('/images/quokka-avatar.jpg')}
+        alt=""
+        width="34"
+        height="34"
+        loading="eager"
+      />
+      <span class="brand__text">
+        <span class="brand__name">{site.name}</span>
+        <span class="brand__en">{site.nameEn}</span>
+      </span>
+    </a>
+
+    <nav class="site-nav" aria-label="주요 메뉴">
+      {
+        nav.map((item) => (
+          <a
+            class="site-nav__link"
+            href={withBase(item.href)}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="header-tools">
+      <a class="icon-btn" href={withBase('/search/')} aria-label="글 검색">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" stroke-linecap="round" />
+        </svg>
+      </a>
+      <button class="icon-btn theme-toggle" type="button" id="theme-toggle" aria-label="다크 모드 전환">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke-linejoin="round" />
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>

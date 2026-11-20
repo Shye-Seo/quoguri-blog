@@ -1,0 +1,20 @@
+{
+  "name": "quoguri-blog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "쿼구리(quoguri) — 테크·뷰티·여행 리뷰 블로그",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.10",
+    "@astrojs/mdx": "^8.1.6",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.6",
+    "astro": "^7.4.13"
+  }
+}

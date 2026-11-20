@@ -1,0 +1,129 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/site';
+---
+
+<BaseLayout title="글 검색" description="쿼구리 블로그의 글을 제목·태그·본문으로 검색해 보세요.">
+  <div class="container">
+    <header class="page-head" style="border-bottom:none; margin-bottom:12px">
+      <p class="eyebrow">search</p>
+      <h1 class="page-head__title">무엇을 찾으세요?</h1>
+      <p class="page-head__desc">제목, 태그, 본문 내용 어디에 있어도 찾아 드려요.</p>
+    </header>
+
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" stroke-linecap="round" />
+      </svg>
+      <label class="sr-only" for="q">검색어</label>
+      <input id="q" type="search" placeholder="예: 디카, 데스크테리어, 파우치" autocomplete="off" />
+    </div>
+
+    <p class="search-empty" id="search-status">검색어를 입력하면 결과가 여기에 나와요.</p>
+    <div class="list" id="results" style="padding-bottom:64px"></div>
+
+    <div
+      id="search-app"
+      data-index={withBase('/search-index.json')}
+      data-base={withBase('/')}
+      hidden
+    >
+    </div>
+  </div>
+
+  <script>
+    type SearchItem = {
+      title: string;
+      description: string;
+      path: string;
+      category: string;
+      emoji: string;
+      tags: string[];
+      date: string;
+      text: string;
+    };
+
+    const app = document.getElementById('search-app');
+    const input = document.getElementById('q') as HTMLInputElement | null;
+    const status = document.getElementById('search-status');
+    const results = document.getElementById('results');
+
+    const escapeHtml = (value: string) =>
+      value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    if (app && input && status && results) {
+      const indexUrl = app.dataset.index ?? '/search-index.json';
+      const base = app.dataset.base ?? '/';
+      let items: SearchItem[] = [];
+
+      const render = (list: SearchItem[], keyword: string) => {
+        if (!keyword.trim()) {
+          results.innerHTML = '';
+          status.hidden = false;
+          status.textContent = '검색어를 입력하면 결과가 여기에 나와요.';
+          return;
+        }
+        status.hidden = false;
+        status.textContent = list.length
+          ? `'${keyword}' 검색 결과 ${list.length}편`
+          : `'${keyword}'에 맞는 글이 아직 없어요. 다른 단어로 찾아보시겠어요?`;
+        results.innerHTML = list
+          .map(
+            (item) => `
+            <a class="list-item" href="${base}${item.path.replace(/^\//, '')}">
+              <span class="list-item__media" style="display:grid;place-items:center;font-size:1.4rem;background:var(--bg-soft)">${item.emoji}</span>
+              <span>
+                <span class="chip chip--category">${escapeHtml(item.category)}</span>
+                <span class="list-item__title" style="display:block">${escapeHtml(item.title)}</span>
+                <span class="list-item__desc" style="display:block">${escapeHtml(item.description)}</span>
+                <span class="list-item__meta">${escapeHtml(item.date)} · ${item.tags.map((tag) => `#${escapeHtml(tag)}`).join(' ')}</span>
+              </span>
+            </a>`,
+          )
+          .join('');
+      };
+
+      const search = (keyword: string) => {
+        const query = keyword.trim().toLowerCase();
+        if (!query) {
+          render([], '');
+          return;
+        }
+        const terms = query.split(/\s+/).filter(Boolean);
+        const matched = items.filter((item) => {
+          const haystack = [item.title, item.description, item.category, item.tags.join(' '), item.text]
+            .join(' ')
+            .toLowerCase();
+          return terms.every((term) => haystack.includes(term));
+        });
+        render(matched, keyword.trim());
+      };
+
+      const params = new URLSearchParams(window.location.search);
+      const initial = params.get('q') ?? '';
+      if (initial) {
+        input.value = initial;
+        status.textContent = '찾는 중…';
+      }
+
+      try {
+        void (async () => {
+          const response = await fetch(indexUrl);
+          items = (await response.json()) as SearchItem[];
+          if (initial) search(initial);
+        })().catch(() => {
+          status.textContent = '검색 목록을 불러오지 못했어요. 새로고침해 주세요.';
+        });
+      } catch {
+        status.textContent = '검색 목록을 불러오지 못했어요. 새로고침해 주세요.';
+      }
+
+      input.addEventListener('input', () => search(input.value));
+    }
+  </script>
+</BaseLayout>

@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # 매일 09:00(KST)에 한 번 다시 빌드 — 예약 발행(pubDate가 미래인) 글이 자동으로 올라옵니다.
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # ▼▼ 도메인 연결 후에는 이 두 줄만 바꾸면 됩니다 (README '커스텀 도메인' 참고)
+  #    프로젝트 페이지: SITE_URL=https://shye-seo.github.io   BASE_PATH=/quoguri-blog
+  #    quoguri.com 연결: SITE_URL=https://quoguri.com         BASE_PATH=/
+  SITE_URL: https://shye-seo.github.io
+  BASE_PATH: /quoguri-blog
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # 저장소 Settings → Secrets and variables → Actions → Variables 에 넣으면 자동 적용
+          PUBLIC_ADSENSE_CLIENT: ${{ vars.PUBLIC_ADSENSE_CLIENT }}
+          PUBLIC_ADSENSE_SLOT_ARTICLE: ${{ vars.PUBLIC_ADSENSE_SLOT_ARTICLE }}
+          PUBLIC_ADSENSE_SLOT_HOME: ${{ vars.PUBLIC_ADSENSE_SLOT_HOME }}
+          PUBLIC_COUPANG_PARTNER_ID: ${{ vars.PUBLIC_COUPANG_PARTNER_ID }}
+          PUBLIC_GA4_ID: ${{ vars.PUBLIC_GA4_ID }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
