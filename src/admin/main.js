@@ -1461,7 +1461,7 @@ function faqRow(item, index) {
   `;
 }
 
-function aboutPageHtml(about) {
+export function aboutPageHtml(about) {
   const fields = (path, label, value, opts = {}) => `
     <label class="field${opts.wide ? ' field--wide' : ''}">
       <span class="field__label">${label}${opts.hint ? ` <em>${opts.hint}</em>` : ''}</span>
