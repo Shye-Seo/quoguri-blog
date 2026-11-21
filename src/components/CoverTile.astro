@@ -11,9 +11,9 @@ interface Props {
   category: (typeof categories)[number];
   /** 01, 02 … 목록에서의 순번 */
   index?: string;
-  /** 커버 안에 글 제목을 크게 넣고 싶을 때 (히어로·대표 글) */
+  /** 커버 안에 글 제목을 크게 넣고 싶을 때 (거의 쓰지 않음) */
   title?: string;
-  variant?: 'card' | 'hero' | 'row' | 'wide';
+  variant?: 'card' | 'hero' | 'row';
 }
 
 const { category, index, title, variant = 'card' } = Astro.props;
@@ -26,9 +26,11 @@ const { category, index, title, variant = 'card' } = Astro.props;
 >
   <span class="cover__top">
     <span class="cover__cat">{category.short}</span>
-    {index && <span class="cover__no">{index}</span>}
+    {title && <span class="cover__title">{title}</span>}
   </span>
-  {title && <span class="cover__title">{title}</span>}
-  <span class="cover__rule"></span>
-  <span class="cover__blurb">{category.blurb}</span>
+  <span class="cover__foot">
+    <span class="cover__rule"></span>
+    <span class="cover__mark">quoguri</span>
+  </span>
+  {index && <span class="cover__no">{index}</span>}
 </span>

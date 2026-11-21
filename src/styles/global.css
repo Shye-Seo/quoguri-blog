@@ -1777,15 +1777,15 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   height: 100%;
   min-height: 100%;
   padding: 16px 18px;
   overflow: hidden;
   color: var(--accent, var(--sage));
   background:
-    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent, #3f6b5a) 16%, transparent) 0%, transparent 58%),
-    linear-gradient(168deg, color-mix(in srgb, var(--accent, #3f6b5a) 9%, var(--bg-elev)) 0%, var(--bg-elev) 74%);
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent, #3f6b5a) 15%, transparent) 0%, transparent 60%),
+    linear-gradient(168deg, color-mix(in srgb, var(--accent, #3f6b5a) 9%, var(--bg-elev)) 0%, var(--bg-elev) 76%);
 }
 
 .cover::before {
@@ -1794,43 +1794,30 @@ main {
   inset: 0;
   background-image: repeating-linear-gradient(
     0deg,
-    color-mix(in srgb, var(--accent, #3f6b5a) 22%, transparent) 0 1px,
-    transparent 1px 28px
+    color-mix(in srgb, var(--accent, #3f6b5a) 20%, transparent) 0 1px,
+    transparent 1px 30px
   );
-  opacity: 0.22;
+  opacity: 0.2;
   pointer-events: none;
 }
 
 .cover__top {
   position: relative;
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 68px;
 }
 
 .cover__cat {
   font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  opacity: 0.9;
-}
-
-.cover__no {
-  position: absolute;
-  right: -2px;
-  bottom: -14px;
-  font-family: var(--font-display);
-  font-size: 4.2rem;
-  line-height: 1;
-  letter-spacing: -0.05em;
-  opacity: 0.16;
-  font-variant-numeric: tabular-nums;
+  opacity: 0.95;
 }
 
 .cover__title {
-  position: relative;
   font-family: var(--font-display);
   font-size: 1.05rem;
   line-height: 1.45;
@@ -1843,59 +1830,78 @@ main {
   overflow: hidden;
 }
 
-.cover__rule {
+.cover__foot {
   position: relative;
-  display: block;
-  width: 30px;
-  height: 2px;
-  background: currentColor;
-  opacity: 0.45;
+  display: flex;
+  align-items: center;
+  gap: 9px;
 }
 
-.cover__blurb {
-  position: relative;
-  max-width: 18ch;
-  font-size: 0.72rem;
-  line-height: 1.5;
+.cover__rule {
+  display: block;
+  width: 26px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.cover__mark {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
   color: var(--ink-mute);
-  padding-right: 52px;
+  text-transform: lowercase;
+}
+
+.cover__no {
+  position: absolute;
+  right: 12px;
+  bottom: 2px;
+  font-family: var(--font-display);
+  font-size: 3.8rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  opacity: 0.14;
+  font-variant-numeric: tabular-nums;
 }
 
 .cover--hero {
-  padding: 24px 26px;
-}
-
-.cover--hero .cover__blurb {
-  max-width: 22ch;
-}
-
-.cover--hero .cover__no {
-  font-size: 6.4rem;
-  bottom: -22px;
-  opacity: 0.14;
+  padding: 26px 28px;
 }
 
 .cover--hero .cover__cat {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+}
+
+.cover--hero .cover__no {
+  font-size: 6.6rem;
+  right: 18px;
+  bottom: 6px;
+  opacity: 0.13;
+}
+
+.cover--hero .cover__mark {
+  font-size: 0.7rem;
 }
 
 .cover--row {
   padding: 12px 14px;
 }
 
-.cover--row .cover__blurb {
+.cover--row .cover__cat {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+}
+
+.cover--row .cover__mark {
   display: none;
 }
 
 .cover--row .cover__no {
-  font-size: 2.6rem;
-  bottom: -8px;
-  opacity: 0.2;
-}
-
-.cover--row .cover__cat {
-  font-size: 0.6rem;
-  letter-spacing: 0.16em;
+  font-size: 2rem;
+  right: 8px;
+  bottom: 0;
+  opacity: 0.22;
 }
 
 /* 카드·목록·대표 글 안에서 커버가 꽉 차게 */
@@ -2040,17 +2046,19 @@ main {
   padding-top: 26px;
 }
 
-.post-header__stamp {
-  position: absolute;
-  top: 18px;
-  right: 0;
+.post-header__kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.post-header__no {
   font-family: var(--font-display);
-  font-size: clamp(2.6rem, 8vw, 4.6rem);
-  line-height: 1;
-  letter-spacing: -0.06em;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
   color: var(--accent, var(--brand));
-  opacity: 0.13;
-  pointer-events: none;
+  opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
 

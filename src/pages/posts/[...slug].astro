@@ -102,10 +102,12 @@ const jsonLd = [
     </nav>
 
     <header class="post-header">
-      <span class="post-header__stamp" aria-hidden="true">{indexNo}</span>
-      <a class="chip chip--category" href={withBase(`/category/${category.slug}/`)}>
-        {category.label}
-      </a>
+      <div class="post-header__kicker">
+        <span class="post-header__no" aria-hidden="true">{indexNo}</span>
+        <a class="chip chip--category" href={withBase(`/category/${category.slug}/`)}>
+          {category.label}
+        </a>
+      </div>
       <h1 class="post-header__title">{post.data.title}</h1>
       <p class="post-header__desc">{post.data.description}</p>
       <div class="post-meta">
