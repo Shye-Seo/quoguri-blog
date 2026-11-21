@@ -2217,3 +2217,14 @@ main {
     radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent, #3f6b5a) 26%, transparent) 0%, transparent 60%),
     linear-gradient(168deg, color-mix(in srgb, var(--accent, #3f6b5a) 16%, var(--bg-elev)) 0%, var(--bg-elev) 76%);
 }
+
+/* 목록 커버는 조금 더 또렷하게 (작은 크기에서 비어 보이지 않도록) */
+.cover--row {
+  background:
+    radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, var(--accent, #3f6b5a) 22%, transparent) 0%, transparent 65%),
+    linear-gradient(160deg, color-mix(in srgb, var(--accent, #3f6b5a) 15%, var(--bg-elev)) 0%, var(--bg-elev) 88%);
+}
+
+.list-item__media {
+  border: 1px solid var(--line);
+}
