@@ -318,7 +318,7 @@ env:
 2. 글에서 `<CoupangCard url="https://link.coupang.com/a/xxxxx" … />`로 넣습니다.
 3. `PUBLIC_COUPANG_PARTNER_ID` 변수를 넣어 두면 추후 자동 링크 조합에도 쓸 수 있습니다(현재 카드는 `url`을 그대로 사용).
 
-**공정위 문구**는 `src/lib/disclosure.js`의 `COUPANG_DISCLOSURE` 한 곳에서 관리하고, 카드·글 상단 배너·푸터·개인정보처리방침에 함께 쓰입니다.
+**공정위 문구**는 `src/lib/disclosure.js`의 `COUPANG_DISCLOSURE` 한 곳에서 관리하고, 카드·글 상단 배너·개인정보처리방침에 함께 쓰입니다. (사이트 푸터에는 넣지 않습니다 — 글마다 상단 공시 배너로만 표시)
 
 **글 상단 공시 배너**는 아래 중 하나만 해당하면 자동으로 붙습니다.
 
@@ -401,7 +401,7 @@ quoguri-blog/
 | 쿠팡 공시 문구 | `src/lib/disclosure.js`의 `COUPANG_DISCLOSURE` |
 | RSS 피드 미리보기 디자인 | `public/rss.xsl` |
 | 애드센스·쿠팡 ID | GitHub 저장소 Variables (또는 `src/config.ts` 기본값) |
-| 푸터 고지 문구 | `src/lib/disclosure.js`의 `COUPANG_DISCLOSURE` |
+| 푸터 고지 문구 | 없음(쿠팡 공시는 글 상단 배너로만) |
 | 홈 히어로 문구 | `src/pages/index.astro` |
 
 ---

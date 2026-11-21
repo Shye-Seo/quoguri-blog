@@ -1562,22 +1562,31 @@ main {
   gap: 20px;
 }
 
-.post-footer__row {
+.post-footer__bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px 16px;
   flex-wrap: wrap;
+}
+
+.post-footer__bar .share {
+  margin-left: auto;
 }
 
 .author-box {
   display: flex;
-  gap: 12px;
+  gap: 6px 12px;
   align-items: center;
-  padding: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
   border-radius: var(--radius);
   background: var(--bg-tint);
   border: 1px solid var(--line);
+}
+
+.author-box__mark {
+  flex: none;
 }
 
 .author-box img {
@@ -1596,6 +1605,7 @@ main {
   font-size: 0.8rem;
   color: var(--ink-mute);
   line-height: 1.55;
+  flex: 1 1 20ch;
 }
 
 .share {
@@ -1633,6 +1643,15 @@ main {
   .post-nav {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+/* 이전·다음 글이 한쪽만 있어도 반쪽짜리 빈 자리 없이 한 칸 전체로 */
+.post-nav--single {
+  grid-template-columns: 1fr;
+}
+
+.post-nav--single .post-nav__item--next {
+  text-align: left;
 }
 
 .post-nav__item {
@@ -1873,16 +1892,6 @@ main {
   gap: 10px;
   font-size: 0.74rem;
   color: var(--ink-mute);
-}
-
-.disclosure {
-  font-size: 0.72rem;
-  color: var(--ink-mute);
-  line-height: 1.65;
-  background: var(--bg-elev);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
 }
 
 /* ── 유틸 ─────────────────────────────────────────────── */
@@ -3539,38 +3548,32 @@ body {
   border-top: 1.5px dashed var(--line-strong);
 }
 
-.disclosure {
-  background: var(--bg-elev);
-  border: 1.5px dashed var(--line-strong);
-  font-size: 0.72rem;
-}
-
+/* RSS는 버튼이 아니라 푸터의 가벼운 텍스트 링크로만 둡니다. */
 .footer-rss {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 9px 16px;
-  border: 2px solid var(--outline);
-  border-radius: 999px;
-  background: var(--pop-orange);
-  color: var(--ink);
+  gap: 6px;
+  width: fit-content;
+  margin-top: 2px;
   font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 0.84rem;
-  box-shadow: 3px 3px 0 var(--pop-shadow);
-  transform: rotate(-1.2deg);
+  font-weight: 500;
+  font-size: 0.82rem;
+  color: var(--ink-mute);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--ink-mute) 45%, transparent);
+  text-underline-offset: 3px;
 }
 
 .footer-rss:hover {
-  background: var(--pop-yellow);
-  transform: rotate(0deg) translateY(-1px);
-  box-shadow: 4px 4px 0 var(--pop-shadow);
+  color: var(--brand-ink);
+  text-decoration-color: currentColor;
 }
 
 .footer-rss svg {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
+  opacity: 0.85;
 }
 
 /* ── 다크 모드 보정 ─────────────────────────────────── */
@@ -3605,10 +3608,6 @@ body {
 [data-theme='dark'] .chip--category {
   background: color-mix(in srgb, var(--accent, #0e9f79) 22%, var(--bg-elev));
   color: color-mix(in oklab, var(--accent, #0e9f79) 52%, var(--ink));
-}
-
-[data-theme='dark'] .footer-rss {
-  color: #1b140d;
 }
 
 @media (max-width: 640px) {

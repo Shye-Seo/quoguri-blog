@@ -28,6 +28,7 @@ const indexNo = String(allPosts.findIndex((item) => item.id === post.id) + 1).pa
 const category = categoryOf(post);
 const related = await getRelatedPosts(post, features.relatedCount);
 const { newer, older } = await getAdjacentPosts(post);
+const bothNav = Boolean(newer && older);
 const tocItems = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const minutes = readingTime(post.body ?? '');
 const updated = post.data.updatedDate;
@@ -148,26 +149,21 @@ const jsonLd = [
         <AdSlot />
 
         <footer class="post-footer">
-          {
-            post.data.tags.length > 0 && (
-              <div class="chip-row" aria-label="태그">
-                {post.data.tags.map((tag) => (
-                  <a class="chip" href={withBase(`/search/?q=${encodeURIComponent(tag)}`)}>
-                    #{tag}
-                  </a>
-                ))}
-              </div>
-            )
-          }
-
-          <div class="post-footer__row">
-            <div class="author-box">
-              <BrandMark size={44} class="author-box__mark" />
-              <div>
-                <p class="author-box__name">{site.author.name} · {site.author.role}</p>
-                <p class="author-box__text">직접 써보고 직접 검증한 것만 기록해요. {site.nameEn} 블로그에서 만나요.</p>
-              </div>
-            </div>
+          {/* ① 태그 + 공유 — 한 줄 바 */}
+          <div class="post-footer__bar">
+            {
+              post.data.tags.length > 0 ? (
+                <div class="chip-row" aria-label="태그">
+                  {post.data.tags.map((tag) => (
+                    <a class="chip" href={withBase(`/search/?q=${encodeURIComponent(tag)}`)}>
+                      #{tag}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <span />
+              )
+            }
             <div class="share">
               <span>공유</span>
               <button type="button" id="copy-link">링크 복사</button>
@@ -175,22 +171,32 @@ const jsonLd = [
             </div>
           </div>
 
+          {/* ② 작성자 프로필 — 전체 폭 한 줄 */}
+          <div class="author-box">
+            <BrandMark size={38} class="author-box__mark" />
+            <p class="author-box__name">{site.author.name} · {site.author.role}</p>
+            <p class="author-box__text">직접 써보고 직접 검증한 것만 기록해요. {site.nameEn} 블로그에서 만나요.</p>
+          </div>
+
+          {/* ③ 이전·다음 글 — 좌우 2열 대칭, 한쪽만 있으면 한 칸 전체 */}
           {
             (newer || older) && (
-              <nav class="post-nav" aria-label="이전·다음 글">
+              <nav class:list={['post-nav', { 'post-nav--single': !(newer && older) }]} aria-label="이전·다음 글">
                 {older ? (
                   <a class="post-nav__item" href={withBase(`/posts/${older.id}/`)}>
                     <span class="post-nav__label">이전 글</span>
                     <span class="post-nav__title">{older.data.title}</span>
                   </a>
                 ) : (
-                  <span />
+                  bothNav && <span class="post-nav__ghost" aria-hidden="true" />
                 )}
-                {newer && (
+                {newer ? (
                   <a class="post-nav__item post-nav__item--next" href={withBase(`/posts/${newer.id}/`)}>
                     <span class="post-nav__label">다음 글</span>
                     <span class="post-nav__title">{newer.data.title}</span>
                   </a>
+                ) : (
+                  bothNav && <span class="post-nav__ghost" aria-hidden="true" />
                 )}
               </nav>
             )
