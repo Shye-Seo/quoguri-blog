@@ -4,8 +4,6 @@ description: '성분보다 먼저 보는 건 용량당 가격, 그리고 재구�
 pubDate: 2026-11-14
 category: beauty
 tags: ['화장품', '뷰티', '리뷰기준', '스킨케어']
-cover: /images/cover-beauty.jpg
-coverAlt: '크림 톤 트레이 위에 놓인 파우치와 스킨케어 병, 손거울 일러스트'
 featured: false
 ---
 

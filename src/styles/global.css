@@ -475,25 +475,87 @@ main {
   color: var(--ink-mute);
 }
 
-.hero__art {
-  position: relative;
-  isolation: isolate;
-}
-
-.hero__art img {
-  width: 100%;
-  border-radius: var(--radius-lg);
+/* 히어로 오른쪽 — 그림 대신 '지금 읽을 수 있는 글' 목차 */
+.hero__index {
   border: 1px solid var(--line);
-  background: var(--bg-tint);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev);
+  padding: 22px 22px 18px;
+  box-shadow: var(--shadow-sm);
 }
 
-.hero__art::after {
-  content: '';
-  position: absolute;
-  inset: 14px -14px -14px 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-lg);
-  z-index: -1;
+.hero__index-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.hero__index-list {
+  display: flex;
+  flex-direction: column;
+  counter-reset: none;
+}
+
+.hero__index-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.hero__index-list a {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 14px 2px;
+  transition: color 0.15s ease;
+}
+
+.hero__index-list a:hover .hero__index-title-text {
+  color: var(--brand-ink);
+}
+
+.hero__index-no {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  color: var(--brand);
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+}
+
+.hero__index-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.hero__index-cat {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.hero__index-title-text {
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  transition: color 0.15s ease;
+}
+
+.hero__index-more {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.hero__index-more:hover {
+  color: var(--brand-ink);
 }
 
 /* ── 카테고리 스트립 ─────────────────────────────────── */
@@ -1660,5 +1722,433 @@ main {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================
+   에디토리얼 컴포넌트 — 그림 없는 디자인 (2026-11 개편)
+   ========================================================== */
+
+/* 브랜드 모노그램 */
+.brand-mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: var(--mark-size, 34px);
+  height: var(--mark-size, 34px);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .brand-mark {
+  color: var(--ink);
+  --mark-ink: #16130f;
+}
+
+.brand__mark {
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+/* 섹션 리듬 */
+.section--tight {
+  padding-block: 34px;
+}
+
+@media (min-width: 768px) {
+  .section--tight {
+    padding-block: 44px;
+  }
+}
+
+.section-head__note {
+  font-size: 0.84rem;
+  color: var(--ink-mute);
+}
+
+.post-meta--start {
+  justify-content: flex-start;
+  margin-top: 0;
+}
+
+/* ── 타이포그래피 커버 ───────────────────────────────── */
+.cover {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  height: 100%;
+  min-height: 100%;
+  padding: 16px 18px;
+  overflow: hidden;
+  color: var(--accent, var(--sage));
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent, #3f6b5a) 16%, transparent) 0%, transparent 58%),
+    linear-gradient(168deg, color-mix(in srgb, var(--accent, #3f6b5a) 9%, var(--bg-elev)) 0%, var(--bg-elev) 74%);
+}
+
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--accent, #3f6b5a) 22%, transparent) 0 1px,
+    transparent 1px 28px
+  );
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.cover__top {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cover__cat {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.cover__no {
+  position: absolute;
+  right: -2px;
+  bottom: -14px;
+  font-family: var(--font-display);
+  font-size: 4.2rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  opacity: 0.16;
+  font-variant-numeric: tabular-nums;
+}
+
+.cover__title {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: 1.45;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cover__rule {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.cover__blurb {
+  position: relative;
+  max-width: 18ch;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--ink-mute);
+  padding-right: 52px;
+}
+
+.cover--hero {
+  padding: 24px 26px;
+}
+
+.cover--hero .cover__blurb {
+  max-width: 22ch;
+}
+
+.cover--hero .cover__no {
+  font-size: 6.4rem;
+  bottom: -22px;
+  opacity: 0.14;
+}
+
+.cover--hero .cover__cat {
+  font-size: 0.72rem;
+}
+
+.cover--row {
+  padding: 12px 14px;
+}
+
+.cover--row .cover__blurb {
+  display: none;
+}
+
+.cover--row .cover__no {
+  font-size: 2.6rem;
+  bottom: -8px;
+  opacity: 0.2;
+}
+
+.cover--row .cover__cat {
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+}
+
+/* 카드·목록·대표 글 안에서 커버가 꽉 차게 */
+.post-card__media .cover,
+.featured__media .cover,
+.list-item__media .cover {
+  width: 100%;
+  height: 100%;
+}
+
+.featured__media {
+  aspect-ratio: 4 / 3;
+}
+
+@media (min-width: 860px) {
+  .featured__media {
+    aspect-ratio: auto;
+    min-height: 100%;
+  }
+}
+
+.featured__more {
+  align-self: flex-start;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 2px;
+}
+
+.featured__more:hover {
+  color: var(--brand-ink);
+  border-color: var(--brand);
+}
+
+/* 카테고리 카드 — 색 배지 */
+.category-card {
+  position: relative;
+  padding-top: 22px;
+}
+
+.category-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--accent, var(--sage));
+  opacity: 0.85;
+}
+
+.category-card__label {
+  color: var(--accent, var(--ink));
+}
+
+.category-card__arrow {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: var(--ink-mute);
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.category-card:hover .category-card__arrow {
+  transform: translateX(4px);
+  color: var(--accent, var(--ink));
+}
+
+.chip--category {
+  background: color-mix(in srgb, var(--accent, #3f6b5a) 13%, var(--bg-elev));
+  color: var(--accent, var(--sage));
+}
+
+.chip--category:hover {
+  background: color-mix(in srgb, var(--accent, #3f6b5a) 20%, var(--bg-elev));
+  color: var(--accent, var(--sage));
+}
+
+/* ── 빵부스러기 ─────────────────────────────────────── */
+.breadcrumb {
+  padding-top: 20px;
+  font-size: 0.76rem;
+  color: var(--ink-mute);
+}
+
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+}
+
+.breadcrumb li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 46ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breadcrumb li + li::before {
+  content: '/';
+  opacity: 0.45;
+}
+
+.breadcrumb li[aria-current='page'] {
+  color: var(--ink-soft);
+}
+
+.breadcrumb a:hover {
+  color: var(--brand-ink);
+}
+
+/* ── 읽기 진행 막대 ─────────────────────────────────── */
+.reading-progress {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 30;
+  height: 3px;
+  background: transparent;
+  margin-bottom: -3px;
+}
+
+.reading-progress span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.08s linear;
+}
+
+/* ── 글 헤더 ───────────────────────────────────────── */
+.post-header {
+  position: relative;
+  padding-top: 26px;
+}
+
+.post-header__stamp {
+  position: absolute;
+  top: 18px;
+  right: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 8vw, 4.6rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: var(--accent, var(--brand));
+  opacity: 0.13;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-header__series {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: var(--ink-mute);
+  letter-spacing: 0.02em;
+}
+
+.post-cover figcaption {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  color: var(--ink-mute);
+  text-align: center;
+}
+
+/* ── 소개 페이지 ────────────────────────────────────── */
+.about-plate {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, var(--bg-tint), var(--bg-elev));
+  margin-bottom: 8px;
+}
+
+.about-plate__name {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.about-plate__name span {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-left: 6px;
+}
+
+.about-plate__tag {
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+/* ── 자주 묻는 것 ───────────────────────────────────── */
+.faq {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.faq__item {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+
+.faq dt {
+  font-weight: 700;
+  font-size: 0.94rem;
+  margin-bottom: 6px;
+}
+
+.faq dd {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.notfound__mark {
+  margin-inline: auto;
+  color: var(--ink-mute);
+}
+
+/* 목록 썸네일 자리 — 그림이 없을 때도 같은 비율 유지 */
+.list-item__media {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+
+.list-item__media .cover {
+  border-radius: inherit;
+}
+
+.author-box__mark {
+  color: var(--ink-mute);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reading-progress span {
+    transition: none;
   }
 }

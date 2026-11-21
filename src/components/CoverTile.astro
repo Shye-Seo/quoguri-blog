@@ -1,0 +1,34 @@
+---
+/**
+ * 타이포그래피 커버
+ *
+ * 사진(또는 그림)이 없는 글은 카테고리 색과 번호로 만든 커버를 씁니다.
+ * 이미지 파일을 만들지 않아도 카드·히어로·목록이 비어 보이지 않습니다.
+ */
+import type { categories } from '../config';
+
+interface Props {
+  category: (typeof categories)[number];
+  /** 01, 02 … 목록에서의 순번 */
+  index?: string;
+  /** 커버 안에 글 제목을 크게 넣고 싶을 때 (히어로·대표 글) */
+  title?: string;
+  variant?: 'card' | 'hero' | 'row' | 'wide';
+}
+
+const { category, index, title, variant = 'card' } = Astro.props;
+---
+
+<span
+  class={`cover cover--${variant}`}
+  style={`--accent:${category.accent}`}
+  aria-hidden="true"
+>
+  <span class="cover__top">
+    <span class="cover__cat">{category.short}</span>
+    {index && <span class="cover__no">{index}</span>}
+  </span>
+  {title && <span class="cover__title">{title}</span>}
+  <span class="cover__rule"></span>
+  <span class="cover__blurb">{category.blurb}</span>
+</span>

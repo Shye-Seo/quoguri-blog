@@ -4,8 +4,6 @@ description: '2만 원짜리 빈티지 디카가 3일 만에 고장 난 이유. 
 pubDate: 2026-11-18
 category: travel
 tags: ['빈티지디카', '중고거래', '카메라', '당근마켓']
-cover: /images/cover-camera.jpg
-coverAlt: '크림 톤 테이블 위에 놓인 은색 빈티지 컴팩트 카메라 일러스트'
 featured: false
 ---
 

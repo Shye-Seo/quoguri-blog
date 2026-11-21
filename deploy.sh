@@ -2,7 +2,7 @@
 # 쿼구리 블로그 — GitHub Pages 배포 스크립트
 #
 # 사용법:
-#   ./deploy.sh                      # 기본값(Shye-Seo/quoguri-blog)으로 배포
+#   ./deploy.sh                      # 현재 git 원격 저장소로 배포
 #   REPO=내계정/저장소 ./deploy.sh    # 저장소 이름을 바꿔서 배포
 #
 # 하는 일:
@@ -13,7 +13,12 @@
 #   5) Actions 배포가 끝날 때까지 기다린 뒤 라이브 주소를 curl로 확인
 set -euo pipefail
 
-REPO="${REPO:-Shye-Seo/quoguri-blog}"
+# 저장소는 REPO 환경변수로 넘기거나, 현재 git 원격 주소에서 읽습니다.
+#   REPO=내계정/quoguri-blog ./deploy.sh
+if [ -z "${REPO:-}" ] && git config --get remote.origin.url >/dev/null 2>&1; then
+  REPO="$(git config --get remote.origin.url | sed -E 's#^git@github.com:##; s#^https://github.com/##; s#\.git$##')"
+fi
+REPO="${REPO:?REPO를 지정해 주세요}"
 BRANCH="${BRANCH:-main}"
 OWNER="${REPO%%/*}"
 NAME="${REPO##*/}"

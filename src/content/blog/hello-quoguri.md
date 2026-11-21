@@ -4,8 +4,6 @@ description: '테크·데스크테리어부터 뷰티, 여행·디카, 일상 �
 pubDate: 2026-11-20
 category: life
 tags: ['블로그', '쿼구리', '기록']
-cover: /images/cover-life.jpg
-coverAlt: '아침 햇살이 드는 창가와 노트, 커피가 놓인 크림 톤 일러스트'
 featured: true
 ---
 

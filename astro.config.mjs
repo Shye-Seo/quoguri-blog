@@ -45,7 +45,22 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
-      filter: (page) => !page.includes('/404'),
+      // 관리자·검색결과·404는 사이트맵에서 제외합니다.
+      filter: (page) =>
+        !/\.(json|xml|txt)$/.test(page) &&
+        !page.includes('/404') &&
+        !page.includes('/admin') &&
+        !page.includes('/search/'),
+      serialize: (item) => {
+        const homePath = base ? `${base.replace(/\/$/, '')}/` : '/';
+        const home = new URL(item.url).pathname === homePath;
+        const isPost = item.url.includes('/posts/');
+        return {
+          ...item,
+          changefreq: isPost ? 'monthly' : 'weekly',
+          priority: home ? 1 : isPost ? 0.8 : 0.6,
+        };
+      },
     }),
   ],
   markdown: {

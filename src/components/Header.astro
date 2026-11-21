@@ -1,6 +1,7 @@
 ---
 import { nav, site } from '../config';
-import { asset, basePath, withBase } from '../lib/site';
+import { basePath, withBase } from '../lib/site';
+import BrandMark from './BrandMark.astro';
 
 const pathname = Astro.url.pathname;
 const currentPath = basePath && pathname.startsWith(basePath)
@@ -14,14 +15,7 @@ const isActive = (href: string) =>
 <header class="site-header">
   <div class="container site-header__inner">
     <a class="brand" href={withBase('/')} aria-label={`${site.name} 홈으로`}>
-      <img
-        class="brand__mark"
-        src={asset('/images/quokka-avatar.jpg')}
-        alt=""
-        width="34"
-        height="34"
-        loading="eager"
-      />
+      <BrandMark size={34} class="brand__mark" />
       <span class="brand__text">
         <span class="brand__name">{site.name}</span>
         <span class="brand__en">{site.nameEn}</span>

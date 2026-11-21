@@ -10,7 +10,8 @@
 | 프레임워크 | Astro 7 (정적 출력) + MDX |
 | 스타일 | 직접 작성한 CSS 디자인 토큰 (크림·화이트 에디토리얼, 다크 모드 지원) |
 | 배포 | GitHub Actions → GitHub Pages (하루 1회 자동 재빌드 포함) |
-| 기본 주소 | `https://shye-seo.github.io/quoguri-blog/` |
+| 주소 | `.github/workflows/deploy.yml`의 `SITE_URL`·`BASE_PATH`로 결정 (도메인을 붙이면 그 주소가 기준이 됩니다) |
+| 관리자 | `/admin/` — 브라우저에서 바로 글을 쓰고 커밋하는 전용 화면 |
 | 목표 도메인 | `https://quoguri.com` |
 
 ---
@@ -66,13 +67,17 @@ draft: false                 # true면 빌드에서 제외
 
 카테고리를 바꾸거나 추가하려면 `src/config.ts`의 `categories`를 고치고, 같은 파일의 `category` enum(`src/content.config.ts`)도 함께 맞춰 주세요.
 
-### 사진 넣기
+### 사진 넣기 (선택)
+
+이 블로그는 **대표 사진 없이도 완성됩니다.** `cover`를 비워 두면 카테고리 색과 번호로 만든
+타이포그래피 커버가 자동으로 그려져요. 직접 찍은 사진이 있을 때만 넣으면 됩니다.
 
 1. 사진을 `public/images/` 폴더에 넣습니다. (예: `public/images/my-photo.jpg`)
-2. frontmatter의 `cover`에 `/images/my-photo.jpg`를 적습니다.
+2. frontmatter의 `cover`에 `/images/my-photo.jpg`를 적고, `coverAlt`에 설명을 씁니다.
 3. 본문 중간에 넣을 때는 `![설명](/images/my-photo.jpg)` 처럼 씁니다.
 
 > 사진은 가로 1600px 정도, JPEG 품질 80~85면 충분해요. 그 이상은 로딩만 느려집니다.
+> 일러스트·자동 생성 그림은 쓰지 않습니다. (2026-11 개편에서 모두 제거)
 
 ### 본문에서 쓸 수 있는 요소
 
@@ -120,7 +125,51 @@ draft: false                 # true면 빌드에서 제외
 
 ---
 
-## 3. 배포 (GitHub Pages)
+## 3. 관리자 페이지 (`/admin/`)
+
+브라우저에서 글을 쓰고, 그대로 GitHub에 커밋해 자동 배포까지 보내는 화면입니다.
+계정 정보는 **코드에 전혀 없습니다.** 로그인은 직접 발급한 GitHub 토큰으로만 이뤄집니다.
+
+### 처음 한 번: 토큰 만들기
+
+1. <https://github.com/settings/personal-access-tokens/new> 를 엽니다. (Fine-grained token)
+2. **Token name**: `quoguri-admin` / **Expiration**: 90 days 권장
+3. **Repository access** → **Only select repositories** → `quoguri-blog` 만 선택
+4. **Repository permissions** → **Contents: Read and write** (Metadata는 자동으로 Read)
+5. Generate token → `github_pat_…` 값을 복사
+
+### 로그인
+
+1. `/admin/` 을 엽니다. (예: `https://<계정>.github.io/quoguri-blog/admin/`)
+2. 토큰을 붙여 넣고 로그인합니다. 저장소는 자동으로 찾습니다.
+3. 토큰은 **그 탭의 sessionStorage**에만 저장되고, '기억하기'를 켰을 때만 localStorage에 남습니다.
+   로그아웃하면 즉시 지워집니다. `api.github.com` 외에는 어떤 곳으로도 전송하지 않습니다.
+4. 화면에는 `Content-Security-Policy`로 통신 대상을 GitHub API 하나로 제한해 두었습니다.
+
+### 할 수 있는 일
+
+| 기능 | 설명 |
+| --- | --- |
+| 글 목록 | 발행·임시저장·예약·대표 글 필터, 제목·태그 검색 |
+| 새 글 / 수정 | 제목, 주소(슬러그), 설명, 카테고리, 태그, 발행일, 수정일, 대표 사진, 시리즈, draft·대표 토글 |
+| 본문 편집 | 마크다운 에디터 + 서식 버튼 + 실시간 미리보기 (MDX 컴포넌트는 안내 박스로 표시) |
+| SEO 점검 | 제목 25~45자·키워드 앞배치, 설명 80~150자, H2/H3 구조, 본문 분량, 내부 링크, 이미지 alt를 100점으로 실시간 채점 |
+| 저장 | GitHub Contents API로 커밋 → `main` 푸시 → 기존 Actions가 자동 배포 (1~3분) |
+| 복제 / 삭제 / 주소 변경 | 복제는 임시저장 사본을 만들고, 삭제·주소 변경은 확인 후 처리 |
+| 단축키 | `Ctrl/⌘ + S` 저장 |
+
+### 노출되지 않는 이유
+
+- `/admin/` 은 `robots.txt`에서 차단(`Disallow`)되고 `<meta name="robots" content="noindex, nofollow, noarchive">`가 붙습니다.
+- 사이트맵에서 제외되고, 헤더·푸터·모바일 탭 어디에도 링크가 없습니다.
+- HTML·JS·JSON-LD·메타데이터에 아이디·이메일·토큰이 없습니다. (배포 도메인은 GitHub Pages가 정한 주소라 canonical에 자동으로 들어갑니다.)
+- 토큰이 없으면 아무 데이터도 읽을 수 없습니다. 관리자 화면 자체는 공개되어 있어도 안전합니다.
+
+> 도메인(`quoguri.com`)을 연결하면 canonical·OG 주소도 그 도메인으로 바뀌어, 주소에 남는 계정 흔적까지 사라집니다.
+
+---
+
+## 4. 배포 (GitHub Pages)
 
 ### 처음 한 번만
 
@@ -145,11 +194,11 @@ draft: false                 # true면 빌드에서 제외
 
 ---
 
-## 4. `quoguri.com` 연결하기
+## 5. `quoguri.com` 연결하기
 
 도메인을 산 다음, **DNS 설정 → GitHub 설정 → 코드 두 줄** 순서로 하면 됩니다.
 
-### 4-1. DNS 레코드 (도메인 산 곳에서 설정)
+### 5-1. DNS 레코드 (도메인 산 곳에서 설정)
 
 | 타입 | 이름(호스트) | 값 |
 | --- | --- | --- |
@@ -162,12 +211,12 @@ draft: false                 # true면 빌드에서 제외
 - 기존에 있던 기본 A 레코드나 `parking` 레코드는 지워 주세요.
 - 전파에 최대 24시간이 걸릴 수 있어요.
 
-### 4-2. GitHub 설정
+### 5-2. GitHub 설정
 
 저장소 → **Settings → Pages → Custom domain**에 `quoguri.com`을 넣고 **Save** → **Enforce HTTPS** 체크.
 (이 저장소는 Actions로 배포하므로 `CNAME` 파일은 필요 없습니다.)
 
-### 4-3. 코드에서 주소 바꾸기
+### 5-3. 코드에서 주소 바꾸기
 
 `.github/workflows/deploy.yml` 맨 위 `env` 두 줄만 바꿉니다.
 
@@ -183,7 +232,7 @@ env:
 
 ---
 
-## 5. 애드센스(Google AdSense) 붙이기
+## 6. 애드센스(Google AdSense) 붙이기
 
 1. <https://adsense.google.com> 에서 사이트 추가 → `quoguri.com` (또는 임시 주소).
 2. **소유 확인**을 위해 `public/ads.txt` 파일을 만들고 아래 한 줄을 넣습니다.
@@ -211,7 +260,7 @@ env:
 
 ---
 
-## 6. 쿠팡 파트너스
+## 7. 쿠팡 파트너스
 
 1. <https://partners.coupang.com> 가입 → 상품 링크(단축 URL)를 만듭니다.
 2. 글에서 `<CoupangCard url="https://link.coupang.com/a/xxxxx" … />`로 넣습니다.
@@ -223,36 +272,41 @@ env:
 
 ---
 
-## 7. SEO · 검색 등록
+## 8. SEO · 검색 등록
 
 이미 만들어져 있는 것:
 
-- `sitemap-index.xml` (+ `sitemap-0.xml`) — 자동 생성
-- `robots.txt` — 사이트맵 주소 포함 (네이버 Yeti·다음 Daumoa 허용)
+- `sitemap-index.xml` (+ `sitemap-0.xml`) — 자동 생성, `/admin/`·`/search/`·404는 제외
+- `robots.txt` — `/admin/`·`/search/` 차단, 사이트맵 주소 포함 (네이버 Yeti·다음 Daumoa 허용)
 - `rss.xml` — RSS 2.0 피드
-- 페이지별 `title`·`description`·`canonical`·Open Graph·Twitter 카드
-- 글마다 `BlogPosting` + `BreadcrumbList` 구조화 데이터(JSON-LD)
-- 검색 페이지(`/search/`) — 빌드 시 만든 정적 인덱스로 동작
+- 페이지별 `title`·`description`·`keywords`·`canonical`·`hreflang`·Open Graph·Twitter 카드
+- 글마다 `BlogPosting` + `BreadcrumbList`, 홈은 `WebSite` + `Organization`, 소개는 `FAQPage` 구조화 데이터
+- 화면에 보이는 빵부스러기(`홈 / 카테고리 / 글`), 글 하단 관련 글 내부 링크, 이전·다음 글
+- 검색 페이지(`/search/`) — 빌드 시 만든 정적 인덱스로 동작 (noindex)
+- 검색엔진 소유확인 메타 자리 — `src/config.ts`의 `verification.google` / `verification.naver`
+  또는 저장소 변수 `PUBLIC_GOOGLE_SITE_VERIFICATION` / `PUBLIC_NAVER_SITE_VERIFICATION`
+  (Actions 워크플로의 빌드 env에 이 두 변수를 추가하면 자동으로 들어갑니다)
 
 **등록할 곳**
 
 1. [Google Search Console](https://search.google.com/search-console) → 속성 추가 → `sitemap-index.xml` 제출
-2. [네이버 서치어드바이저](https://searchadvisor.naver.com) → 사이트 등록 → 소유 확인(메타 태그를 `BaseLayout.astro`의 `<head>`에 추가) → 사이트맵 제출
+2. [네이버 서치어드바이저](https://searchadvisor.naver.com) → 사이트 등록 → 소유 확인(HTML 태그의 content 값을 `src/config.ts`의 `verification.naver`에 붙여 넣기) → 사이트맵 제출
 3. [다음 검색등록](https://search.daum.net/search/registration) — RSS(`/rss.xml`) 제출
 
-> 네이버 소유 확인 메타 태그는 `src/layouts/BaseLayout.astro`의 `<head>` 안, `<!-- Open Graph -->` 위에 한 줄로 넣으면 됩니다.
+> 소유확인 값이 비어 있으면 메타 태그 자체가 출력되지 않습니다. 값을 넣고 다시 배포하면 `<head>`에 자동으로 들어갑니다.
+> 색인 상태는 서치콘솔·서치어드바이저에서 확인하고, 새 글은 사이트맵 재제출 없이도 다음 크롤에서 반영됩니다.
 
 ---
 
-## 8. 폴더 구조
+## 9. 폴더 구조
 
 ```
 quoguri-blog/
 ├─ .github/workflows/deploy.yml   # GitHub Pages 자동 배포
 ├─ astro.config.mjs               # 사이트 주소·base·마크다운 설정
 ├─ public/
-│  ├─ favicon.svg
-│  └─ images/                     # 대표 이미지·커버 (직접 추가)
+│  ├─ favicon.svg · apple-touch-icon.png
+│  └─ images/og-default.jpg       # OG 카드 (스크립트로 생성, 일러스트 없음)
 ├─ src/
 │  ├─ config.ts                   # ★ 브랜드·카테고리·수익화 ID·SNS 링크
 │  ├─ content.config.ts           # 글 frontmatter 스키마
@@ -261,7 +315,13 @@ quoguri-blog/
 │  ├─ layouts/BaseLayout.astro    # <head> SEO·OG·광고 스크립트
 │  ├─ lib/                        # 경로·날짜·글 목록 도우미
 │  ├─ pages/                      # 홈·글·카테고리·검색·소개·개인정보·RSS·robots
+│  ├─ pages/admin/index.astro     # ★ 관리자 화면 (noindex)
+│  ├─ admin/                      # 관리자 로직 (github·frontmatter·markdown·seo)
 │  └─ styles/global.css           # 디자인 토큰 (색·타이포·컴포넌트)
+├─ scripts/
+│  ├─ generate-brand-assets.py    # OG 카드·앱 아이콘 생성
+│  └─ verify-dist.mjs             # 빌드 검증 (개인정보·SEO·robots·sitemap)
+├─ tests/admin.test.mjs           # 관리자 모듈 테스트
 └─ package.json
 ```
 
@@ -278,7 +338,7 @@ quoguri-blog/
 
 ---
 
-## 9. 자주 겪는 문제
+## 10. 자주 겪는 문제
 
 | 증상 | 원인 / 해결 |
 | --- | --- |
@@ -288,11 +348,14 @@ quoguri-blog/
 | 글을 올렸는데 안 보임 | `draft: true`이거나 `pubDate`가 미래일 수 있습니다. |
 | 광고가 안 나옴 | `PUBLIC_ADSENSE_CLIENT` 형식(`ca-pub-` + 16자리)과 슬롯 ID를 확인하고, 애드센스 승인 상태를 봅니다. |
 | 검색이 안 됨 | `/search-index.json`이 배포됐는지 확인합니다(빌드 때 자동 생성). |
+| 관리자 로그인이 안 됨 | 토큰 만료(401), 저장소 미선택(404), Contents 권한 없음(403) 순서로 확인합니다. '저장소를 직접 지정하기'에 `owner/repo`를 적어 볼 수도 있습니다. |
+| 관리자에서 저장했는데 사이트가 그대로 | Actions 탭에서 배포가 도는지 확인합니다. 커밋 후 1~3분 걸리고, `draft: true`면 사이트에 나오지 않습니다. |
 
 ---
 
-## 10. 참고
+## 11. 참고
 
 - 디자인·문구는 쿼구리 브랜드 기준으로 작성돼 있습니다. 색을 바꾸려면 `src/styles/global.css`의 `:root` 변수만 고치면 전체에 반영됩니다.
 - 현재 글 4편은 형식을 보여 주는 **샘플 글**입니다. 실제 운영 전에 자유롭게 고치거나 지우고 본인 글로 채우세요.
+- `npm test` (관리자 모듈), `npm run verify` (빌드 검증: 개인정보 노출·SEO 태그·robots·sitemap)로 배포 전 확인을 합니다.
 - 라이선스: 콘텐츠 © 쿼구리. 코드는 자유롭게 사용하셔도 됩니다.

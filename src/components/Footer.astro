@@ -1,6 +1,7 @@
 ---
 import { categories, coupang, site } from '../config';
-import { absoluteUrl, asset, basePath, withBase } from '../lib/site';
+import { absoluteUrl, basePath, withBase } from '../lib/site';
+import BrandMark from './BrandMark.astro';
 
 const pathname = Astro.url.pathname;
 const currentPath = basePath && pathname.startsWith(basePath)
@@ -21,8 +22,8 @@ const socials = [
   <div class="container">
     <div class="site-footer__grid">
       <div class="site-footer__brand">
-        <a class="brand" href={withBase('/')}>
-          <img class="brand__mark" src={asset('/images/quokka-avatar.jpg')} alt="" width="34" height="34" loading="lazy" />
+        <a class="brand" href={withBase('/')} aria-label={`${site.name} 홈으로`}>
+          <BrandMark size={34} class="brand__mark" />
           <span class="brand__text">
             <span class="brand__name">{site.name}</span>
             <span class="brand__en">{site.nameEn}</span>
@@ -38,7 +39,7 @@ const socials = [
           {
             categories.map((category) => (
               <a href={withBase(`/category/${category.slug}/`)}>
-                {category.emoji} {category.label}
+                {category.label}
               </a>
             ))
           }
