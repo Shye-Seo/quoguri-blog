@@ -12,7 +12,7 @@ const isActive = (href: string) =>
   href === '/' ? currentPath === '/' : currentPath.startsWith(href.replace(/\/$/, ''));
 ---
 
-<header class="site-header">
+<header class="site-header" id="site-header">
   <div class="container site-header__inner">
     <a class="brand" href={withBase('/')} aria-label={`${site.name} 홈으로`}>
       <BrandMark size={34} class="brand__mark" />
@@ -37,12 +37,49 @@ const isActive = (href: string) =>
     </nav>
 
     <div class="header-tools">
-      <a class="icon-btn" href={withBase('/search/')} aria-label="글 검색">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <button
+        class="icon-btn search-toggle"
+        type="button"
+        id="search-toggle"
+        aria-label="글 검색 열기"
+        aria-expanded="false"
+        aria-controls="header-search"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" stroke-linecap="round" />
         </svg>
-      </a>
+      </button>
+
+      <form
+        class="header-search"
+        id="header-search"
+        role="search"
+        action={withBase('/search/')}
+        method="get"
+      >
+        <label class="sr-only" for="header-search-input">검색어</label>
+        <input
+          id="header-search-input"
+          type="search"
+          name="q"
+          placeholder="무엇을 찾으세요?"
+          autocomplete="off"
+          enterkeyhint="search"
+        />
+        <button class="header-search__submit" type="submit" aria-label="검색하기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" stroke-linecap="round" />
+          </svg>
+        </button>
+        <button class="header-search__close" type="button" id="search-close" aria-label="검색 닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" stroke-linecap="round" />
+          </svg>
+        </button>
+      </form>
+
       <button class="icon-btn theme-toggle" type="button" id="theme-toggle" aria-label="다크 모드 전환">
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke-linejoin="round" />
@@ -52,6 +89,63 @@ const isActive = (href: string) =>
           <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6" stroke-linecap="round" />
         </svg>
       </button>
+
+      <noscript>
+        <a class="icon-btn" href={withBase('/search/')} aria-label="글 검색 페이지로">검색</a>
+      </noscript>
     </div>
   </div>
 </header>
+
+<script>
+  (() => {
+    const header = document.getElementById('site-header');
+    const toggle = document.getElementById('search-toggle');
+    const form = document.getElementById('header-search') as HTMLFormElement | null;
+    const close = document.getElementById('search-close');
+    const input = document.getElementById('header-search-input') as HTMLInputElement | null;
+    if (!header || !toggle || !form || !input) return;
+
+    const setOpen = (open: boolean) => {
+      header.classList.toggle('is-search-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      if (open) {
+        window.setTimeout(() => input.focus({ preventScroll: true }), 30);
+      } else if (document.activeElement === input) {
+        toggle.focus({ preventScroll: true });
+      }
+    };
+
+    toggle.addEventListener('click', () => {
+      setOpen(!header.classList.contains('is-search-open'));
+    });
+
+    close?.addEventListener('click', () => setOpen(false));
+
+    form.addEventListener('submit', (event) => {
+      if (!input.value.trim()) {
+        event.preventDefault();
+        input.focus();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      const isOpen = header.classList.contains('is-search-open');
+      if (event.key === 'Escape' && isOpen) {
+        setOpen(false);
+      }
+      if (event.key === '/' && !isOpen) {
+        const target = event.target as HTMLElement | null;
+        const tag = target?.tagName?.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || target?.isContentEditable) return;
+        event.preventDefault();
+        setOpen(true);
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!header.classList.contains('is-search-open')) return;
+      if (!header.contains(event.target as Node)) setOpen(false);
+    });
+  })();
+</script>

@@ -9,7 +9,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --test tests/admin.test.mjs",
+    "test": "node --test tests/*.test.mjs",
     "verify": "node scripts/verify-dist.mjs",
     "brand": "python3 scripts/generate-brand-assets.py"
   },

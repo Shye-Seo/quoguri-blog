@@ -10,11 +10,13 @@ export async function GET() {
     title: `${site.name} — ${site.tagline}`,
     description: site.description,
     site: absoluteUrl('/'),
+    /** 브라우저에서 열었을 때 XML 대신 보여 줄 스타일시트 (public/rss.xsl) */
+    stylesheet: withBase('/rss.xsl'),
     items: posts.map((post) => ({
       title: post.data.title,
       description: post.data.description,
       pubDate: post.data.pubDate,
-      link: withBase(`/posts/${post.id}/`),
+      link: absoluteUrl(`/posts/${post.id}/`),
       categories: [categoryOf(post).label, ...post.data.tags],
       author: site.author.name,
     })),

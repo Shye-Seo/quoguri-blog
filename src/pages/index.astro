@@ -105,9 +105,10 @@ const jsonLd = [
           categories.map((category) => (
             <a class="category-card" href={withBase(`/category/${category.slug}/`)} style={`--accent:${category.accent}`}>
               <span class="category-card__top">
-                <span class="category-card__label">{category.label}</span>
+                <span class="category-card__emoji" aria-hidden="true">{category.emoji}</span>
                 <span class="category-card__count">{counts[category.slug]}편</span>
               </span>
+              <span class="category-card__label">{category.label}</span>
               <span class="category-card__blurb">{category.blurb}</span>
               <span class="category-card__arrow" aria-hidden="true">→</span>
             </a>

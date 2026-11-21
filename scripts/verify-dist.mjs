@@ -43,7 +43,7 @@ const PERSONAL = [
   [/ghp_[A-Za-z0-9]{20,}/, 'GitHub 토큰'],
 ];
 
-const textFiles = walk(DIST, (file) => /\.(html|js|json|xml|txt|css|svg)$/.test(file));
+const textFiles = walk(DIST, (file) => /\.(html|js|json|xml|xsl|txt|css|svg)$/.test(file));
 const sourceFiles = walk(SOURCE, (file) => /\.(ts|js|astro|css|json|md|mdx)$/.test(file));
 
 const HOST_ONLY = /shye-seo\.github\.io/gi;
@@ -125,8 +125,47 @@ for (const file of sitemapFiles) {
 }
 
 /* ── 5. 필수 산출물 ────────────────────────────────────── */
-for (const required of ['index.html', 'rss.xml', 'search-index.json', 'admin/index.html', 'apple-touch-icon.png', 'images/og-default.jpg']) {
+for (const required of ['index.html', 'rss.xml', 'rss.xsl', 'search-index.json', 'admin/index.html', 'apple-touch-icon.png', 'images/og-default.jpg']) {
   if (!existsSync(path.join(DIST, required))) problems.push(`필수 파일 없음: ${required}`);
+}
+
+/* ── 5-1. RSS 스타일시트 연결 ─────────────────────────── */
+const rssPath = path.join(DIST, 'rss.xml');
+if (existsSync(rssPath)) {
+  const rss = readFileSync(rssPath, 'utf8');
+  if (!/<\?xml-stylesheet[^>]*href="[^"]*rss\.xsl"/.test(rss)) {
+    problems.push('rss.xml — rss.xsl 스타일시트 연결 없음');
+  }
+  if (!/<link>https?:\/\/\S+<\/link>/.test(rss)) problems.push('rss.xml — 글이나 채널 링크가 절대 URL이 아님');
+}
+const xslPath = path.join(DIST, 'rss.xsl');
+if (existsSync(xslPath)) {
+  const xsl = readFileSync(xslPath, 'utf8');
+  if (!/<xsl:stylesheet[^>]*version="1\.0"/.test(xsl)) problems.push('rss.xsl — XSLT 1.0 선언 없음');
+  if (!/<xsl:template match="\/rss">/.test(xsl)) problems.push('rss.xsl — /rss 템플릿 없음');
+}
+
+/* ── 5-2. 폰트·검색바 ─────────────────────────────────── */
+const homeHtml = existsSync(path.join(DIST, 'index.html'))
+  ? readFileSync(path.join(DIST, 'index.html'), 'utf8')
+  : '';
+if (homeHtml && /Gowun\s*Batang/i.test(homeHtml)) problems.push('index.html — 명조체(Gowun Batang) 참조가 남아 있음');
+const cssFiles = walk(DIST, (file) => file.endsWith('.css'));
+const allCss = cssFiles.map((file) => readFileSync(file, 'utf8')).join('\n');
+if (cssFiles.length && !/Paperlogy/.test(allCss)) problems.push('CSS — Paperlogy 폰트 정의 없음');
+if (homeHtml && !/id="header-search"/.test(homeHtml)) problems.push('index.html — 헤더 검색창 없음');
+if (homeHtml && !/action="[^"]*search\/"/.test(homeHtml)) problems.push('index.html — 헤더 검색 실행 주소 없음');
+
+/* ── 5-3. 소개 페이지가 데이터 파일을 읽는지 ────────────── */
+const aboutJsonPath = path.join(SOURCE, 'content/pages/about.json');
+const aboutPage = path.join(DIST, 'about/index.html');
+if (!existsSync(aboutJsonPath)) problems.push('src/content/pages/about.json 없음');
+else if (existsSync(aboutPage)) {
+  const about = JSON.parse(readFileSync(aboutJsonPath, 'utf8'));
+  const html = readFileSync(aboutPage, 'utf8');
+  const first = about.faq?.items?.[0]?.q;
+  if (first && !html.includes(first)) problems.push('about/index.html — about.json의 FAQ가 반영되지 않음');
+  if (about.hero?.title && !html.includes(about.hero.title)) problems.push('about/index.html — about.json의 히어로 제목이 반영되지 않음');
 }
 
 /* ── 6. 공개 페이지에 관리자 링크가 없는지 ─────────────── */

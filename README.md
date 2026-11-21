@@ -8,10 +8,12 @@
 | 항목 | 내용 |
 | --- | --- |
 | 프레임워크 | Astro 7 (정적 출력) + MDX |
-| 스타일 | 직접 작성한 CSS 디자인 토큰 (크림·화이트 에디토리얼, 다크 모드 지원) |
+| 스타일 | 키치 에디토리얼 — 버터 크림 바탕 + 팝 컬러 스티커 카드, 다크 모드 지원 |
+| 폰트 | 제목·UI `Paperlogy`(CDN), 본문 `Pretendard`(가변 다이내믹 서브셋) |
+| 검색 | 헤더에서 가로로 펼쳐지는 인라인 검색 → `/search/?q=…` |
 | 배포 | GitHub Actions → GitHub Pages (하루 1회 자동 재빌드 포함) |
 | 주소 | `.github/workflows/deploy.yml`의 `SITE_URL`·`BASE_PATH`로 결정 (도메인을 붙이면 그 주소가 기준이 됩니다) |
-| 관리자 | `/admin/` — 브라우저에서 바로 글을 쓰고 커밋하는 전용 화면 |
+| 관리자 | `/admin/` — 글쓰기 · 대표 사진 업로드 · 소개 페이지 편집을 브라우저에서 커밋 |
 | 목표 도메인 | `https://quoguri.com` |
 
 ---
@@ -156,7 +158,23 @@ draft: false                 # true면 빌드에서 제외
 | SEO 점검 | 제목 25~45자·키워드 앞배치, 설명 80~150자, H2/H3 구조, 본문 분량, 내부 링크, 이미지 alt를 100점으로 실시간 채점 |
 | 저장 | GitHub Contents API로 커밋 → `main` 푸시 → 기존 Actions가 자동 배포 (1~3분) |
 | 복제 / 삭제 / 주소 변경 | 복제는 임시저장 사본을 만들고, 삭제·주소 변경은 확인 후 처리 |
-| 단축키 | `Ctrl/⌘ + S` 저장 |
+| 대표 사진 업로드 | '내 컴퓨터에서 선택'으로 사진을 고르면 1600px 이하 JPEG로 줄여 `public/images/uploads/연/월/`에 커밋하고, 대표 사진 주소를 자동으로 채웁니다 |
+| 소개 페이지 탭 | `/about/`의 제목·소개 문단·글쓰기 기준·FAQ·수익화 고지·마지막 인사를 폼으로 고쳐 `src/content/pages/about.json`에 저장합니다 |
+| 단축키 | `Ctrl/⌘ + S` 저장 (글·소개 페이지 모두) |
+
+#### 대표 사진 업로드가 하는 일
+
+1. 사진을 고르면 브라우저에서 최대 1600px·JPEG(품질 0.86)로 줄입니다. (GIF는 원본 유지, 20MB 초과는 거절)
+2. GitHub Contents API로 `public/images/uploads/YYYY/MM/이름-날짜-난수.jpg` 에 커밋합니다.
+3. 대표 사진 주소 칸에 `/images/uploads/…` 가 들어가고, alt가 비어 있으면 `제목 대표 사진`으로 채웁니다.
+4. 글을 저장(커밋)해야 그 글이 새 사진을 씁니다. 사진만 올리고 글을 저장하지 않으면 저장소에 쓰이지 않는 파일이 남습니다.
+
+#### 소개 페이지 관리
+
+- 내용은 `src/content/pages/about.json` 한 파일에 있습니다. `/admin/` → **소개 페이지** 탭에서 읽고 커밋합니다.
+- '이런 걸 써요'의 목록 항목은 `src/config.ts`의 카테고리 설정을 그대로 쓰고, 소제목만 여기서 바꿉니다.
+- 질문과 답을 모두 채운 FAQ만 사이트와 FAQ 구조화 데이터(JSON-LD)에 들어갑니다.
+- 저장 전에 제목·메타 설명(40자 이상)·히어로 제목·반쪽 질문을 점검합니다.
 
 ### 노출되지 않는 이유
 
@@ -278,7 +296,8 @@ env:
 
 - `sitemap-index.xml` (+ `sitemap-0.xml`) — 자동 생성, `/admin/`·`/search/`·404는 제외
 - `robots.txt` — `/admin/`·`/search/` 차단, 사이트맵 주소 포함 (네이버 Yeti·다음 Daumoa 허용)
-- `rss.xml` — RSS 2.0 피드
+- `rss.xml` — RSS 2.0 피드. 브라우저로 열면 `public/rss.xsl` 덕분에 XML 원문 대신 피드 미리보기 카드가 보입니다. (RSS 리더는 스타일시트를 무시하고 원문을 읽습니다)
+- `rss.xml`의 글 링크는 RSS 리더에서 바로 열리도록 절대 주소로 나갑니다
 - 페이지별 `title`·`description`·`keywords`·`canonical`·`hreflang`·Open Graph·Twitter 카드
 - 글마다 `BlogPosting` + `BreadcrumbList`, 홈은 `WebSite` + `Organization`, 소개는 `FAQPage` 구조화 데이터
 - 화면에 보이는 빵부스러기(`홈 / 카테고리 / 글`), 글 하단 관련 글 내부 링크, 이전·다음 글
@@ -306,22 +325,25 @@ quoguri-blog/
 ├─ astro.config.mjs               # 사이트 주소·base·마크다운 설정
 ├─ public/
 │  ├─ favicon.svg · apple-touch-icon.png
-│  └─ images/og-default.jpg       # OG 카드 (스크립트로 생성, 일러스트 없음)
+│  ├─ images/og-default.jpg       # OG 카드 (스크립트로 생성, 일러스트 없음)
+│  ├─ images/uploads/             # 관리자에서 올린 대표 사진
+│  └─ rss.xsl                     # /rss.xml을 브라우저에서 열 때 보이는 피드 미리보기
 ├─ src/
 │  ├─ config.ts                   # ★ 브랜드·카테고리·수익화 ID·SNS 링크
 │  ├─ content.config.ts           # 글 frontmatter 스키마
 │  ├─ content/blog/               # ★ 글 (.md / .mdx)
+│  ├─ content/pages/about.json    # ★ 소개 페이지 내용 (관리자에서 편집)
 │  ├─ components/                 # Header · Footer · PostCard · AdSlot · CoupangCard
 │  ├─ layouts/BaseLayout.astro    # <head> SEO·OG·광고 스크립트
 │  ├─ lib/                        # 경로·날짜·글 목록 도우미
 │  ├─ pages/                      # 홈·글·카테고리·검색·소개·개인정보·RSS·robots
 │  ├─ pages/admin/index.astro     # ★ 관리자 화면 (noindex)
-│  ├─ admin/                      # 관리자 로직 (github·frontmatter·markdown·seo)
+│  ├─ admin/                      # 관리자 로직 (github·frontmatter·markdown·seo·about·images)
 │  └─ styles/global.css           # 디자인 토큰 (색·타이포·컴포넌트)
 ├─ scripts/
 │  ├─ generate-brand-assets.py    # OG 카드·앱 아이콘 생성
 │  └─ verify-dist.mjs             # 빌드 검증 (개인정보·SEO·robots·sitemap)
-├─ tests/admin.test.mjs           # 관리자 모듈 테스트
+├─ tests/                         # 관리자 모듈 · 소개 데이터 · 사진 업로드 테스트
 └─ package.json
 ```
 
@@ -331,7 +353,9 @@ quoguri-blog/
 | --- | --- |
 | 블로그 소개 문구·SNS 링크·연락처 | `src/config.ts` |
 | 카테고리 이름·색·설명 | `src/config.ts` |
-| 색상·글꼴·여백 | `src/styles/global.css` (`:root` 토큰) |
+| 색상·글꼴·여백 | `src/styles/global.css` (`:root` 토큰, 키치 컴포넌트 레이어) |
+| 소개 페이지 내용 | `/admin/` → 소개 페이지 탭 또는 `src/content/pages/about.json` |
+| RSS 피드 미리보기 디자인 | `public/rss.xsl` |
 | 애드센스·쿠팡 ID | GitHub 저장소 Variables (또는 `src/config.ts` 기본값) |
 | 푸터 고지 문구 | `src/config.ts`의 `coupang.disclosure` |
 | 홈 히어로 문구 | `src/pages/index.astro` |

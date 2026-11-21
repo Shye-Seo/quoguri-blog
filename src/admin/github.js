@@ -16,14 +16,17 @@ export class GitHubError extends Error {
   }
 }
 
-export function encodeBase64(text) {
-  const bytes = new TextEncoder().encode(text);
+export function encodeBase64Bytes(bytes) {
   let binary = '';
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {
     binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
   }
   return btoa(binary);
+}
+
+export function encodeBase64(text) {
+  return encodeBase64Bytes(new TextEncoder().encode(text));
 }
 
 export function decodeBase64(base64) {
@@ -129,6 +132,18 @@ export class GitHub {
         message,
         content: encodeBase64(text),
         ...(sha ? { sha } : {}),
+        ...(branch ? { branch } : {}),
+      },
+    });
+  }
+
+  /** 이미지 같은 바이너리 파일을 그대로 커밋합니다. (대표 사진 업로드) */
+  putBytes(path, { bytes, message, branch }) {
+    return this.request(`/repos/${this.repoFullName}/contents/${encodeURI(path)}`, {
+      method: 'PUT',
+      body: {
+        message,
+        content: encodeBase64Bytes(bytes),
         ...(branch ? { branch } : {}),
       },
     });

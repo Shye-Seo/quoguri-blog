@@ -69,7 +69,7 @@ export const categories = [
     label: '테크·데스크테리어',
     short: '테크',
     emoji: '🖥️',
-    accent: '#3F6B5A',
+    accent: '#0E9F79',
     blurb: '맥북·태블릿·키보드, 책상 위의 물건들',
   },
   {
@@ -77,7 +77,7 @@ export const categories = [
     label: '뷰티·리뷰',
     short: '뷰티',
     emoji: '🧴',
-    accent: '#D2603A',
+    accent: '#FF4D67',
     blurb: '써보고 남는 것만 남기는 솔직 후기',
   },
   {
@@ -85,7 +85,7 @@ export const categories = [
     label: '여행·디카',
     short: '여행',
     emoji: '📷',
-    accent: '#4B6E8C',
+    accent: '#2F7DF6',
     blurb: '빈티지 디카와 함께한 동네 여행',
   },
   {
@@ -93,7 +93,7 @@ export const categories = [
     label: '일상·꿀팁',
     short: '일상',
     emoji: '🌿',
-    accent: '#8A6A3B',
+    accent: '#F2A007',
     blurb: '살림·기록·생활 속 작은 발견',
   },
 ] as const;

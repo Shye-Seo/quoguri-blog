@@ -105,18 +105,14 @@ const jsonLdList = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={imageAlt} />
 
-    <!-- 폰트 -->
+    <!-- 폰트: 제목·UI는 Paperlogy, 본문은 장문 가독성이 좋은 Pretendard -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preload" type="font/woff2" as="font" crossorigin
+      href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-8ExtraBold.woff2" />
 
     <!-- 테마(다크/라이트) 깜빡임 방지 -->
     <script is:inline>

@@ -11,6 +11,24 @@ import { GitHub, GitHubError } from './github.js';
 import { parsePost, serializePost, slugify, toDateInput } from './frontmatter.js';
 import { renderMarkdown } from './markdown.js';
 import { analyzeSeo } from './seo.js';
+import {
+  ABOUT_PATH,
+  aboutDefaults,
+  cleanAbout,
+  todayInput,
+  validateAbout,
+  parseAbout,
+  serializeAbout,
+} from './about.js';
+import {
+  MAX_OUTPUT_BYTES,
+  MAX_EDGE,
+  buildUploadPath,
+  extensionForMime,
+  formatBytes,
+  publicPathFor,
+  validateImageFile,
+} from './images.js';
 
 const CONTENT_DIR = 'src/content/blog';
 const BRANCH = 'main';
@@ -39,6 +57,9 @@ const state = {
   filter: 'all',
   query: '',
   keyword: '',
+  section: 'posts',
+  about: null,
+  aboutDirty: false,
 };
 
 const root = () => document.getElementById('admin-root');
@@ -289,6 +310,10 @@ function renderApp() {
             </svg>
           </span>
           <span class="topbar__name">쿼구리 관리자</span>
+          <nav class="topbar__tabs" aria-label="관리자 메뉴">
+            <button class="topbar__tab${state.section === 'posts' ? ' is-active' : ''}" type="button" data-section="posts">글 관리</button>
+            <button class="topbar__tab${state.section === 'about' ? ' is-active' : ''}" type="button" data-section="about">소개 페이지</button>
+          </nav>
         </div>
         <div class="topbar__right">
           <span class="topbar__repo" title="현재 저장소">${esc(state.repo.owner)}/${esc(state.repo.name)}</span>
@@ -302,16 +327,48 @@ function renderApp() {
   `;
 
   document.getElementById('logout')?.addEventListener('click', () => {
-    if (state.dirty && !window.confirm('저장하지 않은 글이 있어요. 그래도 로그아웃할까요?')) return;
+    if ((state.dirty || state.aboutDirty) && !window.confirm('저장하지 않은 변경이 있어요. 그래도 로그아웃할까요?')) return;
     state.dirty = false;
+    state.aboutDirty = false;
     clearSession();
     state.gh = null;
     state.user = null;
     state.posts = [];
+    state.about = null;
     renderLogin();
   });
 
-  window.onbeforeunload = () => (state.dirty ? true : undefined);
+  document.querySelectorAll('[data-section]').forEach((button) => {
+    button.addEventListener('click', () => switchSection(button.dataset.section));
+  });
+
+  window.onbeforeunload = () => (state.dirty || state.aboutDirty ? true : undefined);
+}
+
+function markSection(section) {
+  state.section = section;
+  document.querySelectorAll('[data-section]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.section === section);
+    button.setAttribute('aria-current', button.dataset.section === section ? 'page' : 'false');
+  });
+}
+
+function switchSection(next) {
+  if (!next || next === state.section) return;
+  if ((state.dirty || state.aboutDirty) && !window.confirm('저장하지 않은 변경이 있어요. 이동할까요?')) return;
+  const leftAbout = state.section === 'about' && next !== 'about';
+  state.dirty = false;
+  state.aboutDirty = false;
+  state.current = null;
+  if (leftAbout) state.about = null;
+  markSection(next);
+  if (next === 'about') {
+    loadAbout();
+  } else if (state.posts.length) {
+    renderList();
+  } else {
+    loadPosts();
+  }
 }
 
 function siteHome() {
@@ -686,10 +743,22 @@ function editorHtml(post) {
               <input id="f-updated" type="date" value="${esc(data.updatedDate)}" />
             </label>
 
-            <label class="field field--wide">
-              <span class="field__label">대표 사진 주소 <em>비우면 타이포그래피 커버</em></span>
-              <input id="f-cover" type="text" placeholder="/images/my-photo.jpg 또는 https://…" value="${esc(data.cover)}" />
-            </label>
+            <div class="field field--wide">
+              <span class="field__label">대표 사진 <em>비우면 타이포그래피 커버</em></span>
+              <div class="upload__row">
+                <input id="f-cover" type="text" placeholder="/images/my-photo.jpg 또는 https://…" value="${esc(data.cover)}" />
+                <label class="btn btn--sm upload__pick" for="f-cover-file">
+                  <span aria-hidden="true">⤒</span> 내 컴퓨터에서 선택
+                </label>
+                <input id="f-cover-file" class="upload__file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" />
+              </div>
+              <p class="upload__state" id="cover-upload-state">
+                사진을 고르면 저장소 public/images/uploads/ 에 올리고 주소를 자동으로 채워요.
+              </p>
+              <div class="upload__preview" id="cover-preview" hidden>
+                <img alt="대표 사진 미리보기" id="cover-preview-img" />
+              </div>
+            </div>
 
             <label class="field field--wide">
               <span class="field__label">대표 사진 설명(alt) <em>사진이 있을 때만</em></span>
@@ -796,6 +865,19 @@ function renderEditor() {
 
   keyword.value = state.keyword;
 
+  const coverFile = $('f-cover-file');
+  const coverState = $('cover-upload-state');
+  const coverPreview = $('cover-preview');
+  const coverPreviewImg = $('cover-preview-img');
+
+  const showCoverPreview = (src) => {
+    if (!coverPreview || !coverPreviewImg || !src) return;
+    coverPreviewImg.src = src.startsWith('http') ? src : `${basePath()}${src.replace(/^\//, '')}`;
+    coverPreview.hidden = false;
+  };
+
+  if (cover.value.trim()) showCoverPreview(cover.value.trim());
+
   const markDirty = () => {
     state.dirty = true;
     stateLabel.textContent = '저장 전 변경';
@@ -837,6 +919,27 @@ function renderEditor() {
   [pubdate, updated, cover, coverAlt, series].forEach((input) => {
     input.addEventListener('input', markDirty);
   });
+
+  cover.addEventListener('input', () => {
+    if (cover.value.trim()) showCoverPreview(cover.value.trim());
+    else if (coverPreview) coverPreview.hidden = true;
+  });
+
+  coverFile?.addEventListener('change', async () => {
+    const file = coverFile.files && coverFile.files[0];
+    if (!file) return;
+    await uploadCoverImage(file, {
+      coverInput: cover,
+      stateEl: coverState,
+      preview: coverPreview,
+      previewImg: coverPreviewImg,
+      onDone: () => {
+        markDirty();
+        scheduleUpdate();
+      },
+    });
+    coverFile.value = '';
+  });
   [category, draft, featured].forEach((input) => {
     input.addEventListener('change', markDirty);
   });
@@ -871,6 +974,136 @@ function renderEditor() {
 
   update();
   if (post.isNew) title.focus();
+}
+
+/* ── 대표 사진 업로드 ──────────────────────────────── */
+function readAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('사진을 읽지 못했어요.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function decodeImage(file, fallbackUrl) {
+  if (typeof createImageBitmap === 'function') {
+    return createImageBitmap(file).catch(() => loadImageElement(fallbackUrl));
+  }
+  return loadImageElement(fallbackUrl);
+}
+
+function loadImageElement(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('사진을 열지 못했어요. 다른 사진으로 시도해 주세요.'));
+    image.src = url;
+  });
+}
+
+/** 사진을 최대 1600px로 줄이고 JPEG로 바꿔 저장소에 올리기 좋은 크기로 만듭니다. */
+async function prepareImageForUpload(file) {
+  const previewUrl = await readAsDataUrl(file);
+
+  if (file.type === 'image/gif') {
+    return { bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type, ext: 'gif', previewUrl };
+  }
+
+  const source = await decodeImage(file, previewUrl);
+  const width = source.width || source.naturalWidth || 0;
+  const height = source.height || source.naturalHeight || 0;
+  if (!width || !height) throw new Error('사진 크기를 읽지 못했어요.');
+
+  const scale = Math.min(1, MAX_EDGE / Math.max(width, height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('이 브라우저에서는 사진을 줄일 수 없어요.');
+
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(source, 0, 0, canvas.width, canvas.height);
+  if (typeof source.close === 'function') source.close();
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.86));
+  if (!blob) throw new Error('사진을 변환하지 못했어요.');
+
+  return {
+    bytes: new Uint8Array(await blob.arrayBuffer()),
+    mime: 'image/jpeg',
+    ext: 'jpg',
+    previewUrl,
+  };
+}
+
+async function uploadCoverImage(file, ui) {
+  const setState = (message, tone = '') => {
+    if (!ui.stateEl) return;
+    ui.stateEl.textContent = message;
+    ui.stateEl.dataset.tone = tone;
+  };
+
+  const problem = validateImageFile(file);
+  if (problem) {
+    setState(problem, 'error');
+    toast(problem, 'error');
+    return;
+  }
+  if (!state.gh) {
+    toast('로그인이 풀렸어요. 새로고침한 뒤 다시 로그인해 주세요.', 'error');
+    return;
+  }
+
+  const title = document.getElementById('f-title')?.value?.trim() || file.name;
+  setState('사진을 준비하는 중…', 'busy');
+
+  try {
+    const prepared = await prepareImageForUpload(file);
+    if (prepared.bytes.length > MAX_OUTPUT_BYTES) {
+      throw new Error(
+        `사진이 너무 커요. ${formatBytes(MAX_OUTPUT_BYTES)} 이하로 줄여 주세요. (지금 ${formatBytes(prepared.bytes.length)})`,
+      );
+    }
+
+    const ext = prepared.ext || extensionForMime(prepared.mime) || 'jpg';
+    const message = `content: 대표 사진 업로드 — ${title}`;
+
+    let path = buildUploadPath({ title, ext });
+    setState(`GitHub에 올리는 중… (${formatBytes(prepared.bytes.length)})`, 'busy');
+
+    try {
+      await state.gh.putBytes(path, { bytes: prepared.bytes, message, branch: BRANCH });
+    } catch (error) {
+      // 같은 이름이 이미 있으면 새 이름으로 한 번 더 시도합니다.
+      if (error instanceof GitHubError && error.status === 422) {
+        path = buildUploadPath({ title, ext });
+        await state.gh.putBytes(path, { bytes: prepared.bytes, message, branch: BRANCH });
+      } else {
+        throw error;
+      }
+    }
+
+    const sitePath = publicPathFor(path);
+    ui.coverInput.value = sitePath;
+
+    const altInput = document.getElementById('f-coveralt');
+    if (altInput && !altInput.value.trim()) {
+      altInput.value = title ? `${title} 대표 사진` : '대표 사진';
+    }
+    if (ui.previewImg) ui.previewImg.src = prepared.previewUrl;
+    if (ui.preview) ui.preview.hidden = false;
+
+    setState(`올렸어요 · ${sitePath}\n글을 저장(커밋)하면 이 사진이 대표 사진으로 쓰입니다.`, 'ok');
+    toast('대표 사진을 올렸어요. 이제 글을 저장해 주세요.');
+    ui.onDone?.();
+  } catch (error) {
+    console.error(error);
+    const message = error?.message || '사진을 올리지 못했어요.';
+    setState(message, 'error');
+    toast(message, 'error');
+  }
 }
 
 function paintSeo(result, host, $) {
@@ -1143,6 +1376,418 @@ async function removePost(post) {
   }
 }
 
+/* ── 소개 페이지(/about/) 관리 ─────────────────────── */
+function aboutUrl() {
+  return `${basePath()}about/`;
+}
+
+function getByPath(object, path) {
+  return String(path)
+    .split('.')
+    .reduce((value, key) => (value && typeof value === 'object' ? value[key] : undefined), object);
+}
+
+function setByPath(object, path, value) {
+  const keys = String(path).split('.');
+  const last = keys.pop();
+  const target = keys.reduce((node, key) => {
+    if (!node[key] || typeof node[key] !== 'object') node[key] = {};
+    return node[key];
+  }, object);
+  target[last] = value;
+  return object;
+}
+
+async function loadAbout(force = false) {
+  state.section = 'about';
+  markSection('about');
+  const workspace = document.getElementById('workspace');
+  if (!workspace) return;
+
+  if (!force && state.about) {
+    renderAbout();
+    return;
+  }
+
+  workspace.innerHTML = `
+    <div class="loading">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>소개 페이지 내용을 불러오는 중…</p>
+    </div>
+  `;
+
+  try {
+    let file = null;
+    try {
+      file = await state.gh.getFile(ABOUT_PATH);
+    } catch (error) {
+      if (!(error instanceof GitHubError) || error.status !== 404) throw error;
+    }
+
+    const data = file ? parseAbout(file.text) : aboutDefaults();
+    state.about = { data, sha: file?.sha ?? '', exists: Boolean(file) };
+    state.aboutDirty = false;
+    renderAbout();
+  } catch (error) {
+    console.error(error);
+    workspace.innerHTML = `
+      <div class="empty">
+        <p class="empty__title">소개 페이지를 불러오지 못했어요</p>
+        <p>${esc(error?.message || '알 수 없는 오류')}</p>
+        <button class="btn" type="button" id="about-retry">다시 시도</button>
+      </div>
+    `;
+    document.getElementById('about-retry')?.addEventListener('click', () => loadAbout(true));
+  }
+}
+
+function repeatRow(value, index, label) {
+  return `
+    <div class="repeat__row">
+      <textarea rows="3" data-about-list-value placeholder="${esc(label)} ${index + 1}">${esc(value)}</textarea>
+      <button class="repeat__remove" type="button" data-about-remove aria-label="${esc(label)} ${index + 1} 빼기">빼기</button>
+    </div>
+  `;
+}
+
+function faqRow(item, index) {
+  return `
+    <div class="repeat__row repeat__row--faq">
+      <input type="text" data-faq-q placeholder="질문 ${index + 1}" value="${esc(item.q)}" />
+      <textarea rows="2" data-faq-a placeholder="답변">${esc(item.a)}</textarea>
+      <button class="repeat__remove" type="button" data-about-remove aria-label="질문 ${index + 1} 빼기">빼기</button>
+    </div>
+  `;
+}
+
+function aboutPageHtml(about) {
+  const fields = (path, label, value, opts = {}) => `
+    <label class="field${opts.wide ? ' field--wide' : ''}">
+      <span class="field__label">${label}${opts.hint ? ` <em>${opts.hint}</em>` : ''}</span>
+      ${opts.textarea
+        ? `<textarea rows="${opts.rows || 3}" data-about="${path}" placeholder="${esc(opts.placeholder || '')}">${esc(value)}</textarea>`
+        : `<input type="text" data-about="${path}" placeholder="${esc(opts.placeholder || '')}" value="${esc(value)}" />`}
+    </label>
+  `;
+
+  return `
+    <div class="about-admin">
+      <div class="listview__head">
+        <div>
+          <h1 class="listview__title">소개 페이지</h1>
+          <p class="listview__sub">저장소 ${esc(ABOUT_PATH)} · 저장(커밋)하면 몇 분 뒤 사이트에 반영돼요</p>
+        </div>
+        <div class="listview__actions">
+          <a class="btn btn--ghost" href="${esc(aboutUrl())}" target="_blank" rel="noopener noreferrer">사이트에서 보기 ↗</a>
+          <button class="btn" type="button" id="about-reload">불러온 내용으로 되돌리기</button>
+          <button class="btn btn--primary" type="button" id="about-save">저장 (커밋)</button>
+        </div>
+      </div>
+
+      <p class="about-admin__state" id="about-state">${state.aboutDirty ? '저장 전 변경' : '불러옴'}</p>
+
+      <div class="about-admin__grid">
+        <section class="panel panel--wide">
+          <div class="panel__head">
+            <h2 class="panel__title">페이지 기본</h2>
+            <span class="panel__tag">meta</span>
+          </div>
+          <div class="fields">
+            ${fields('meta.eyebrow', '구분 라벨', about.meta.eyebrow, { hint: '영문 소문자', placeholder: 'about' })}
+            ${fields('meta.title', '페이지 제목', about.meta.title, { hint: '브라우저 탭·빵부스러기', placeholder: '쿼구리 소개' })}
+            ${fields('meta.description', '메타 설명', about.meta.description, { wide: true, textarea: true, rows: 3, hint: '40~160자 · 검색 결과에 보여요' })}
+          </div>
+        </section>
+
+        <section class="panel panel--wide">
+          <div class="panel__head">
+            <h2 class="panel__title">히어로</h2>
+            <span class="panel__tag">h1</span>
+          </div>
+          <div class="fields">
+            ${fields('hero.title', '큰 제목 (h1)', about.hero.title, { wide: true, placeholder: '안녕하세요, 쿼구리예요' })}
+            ${fields('hero.lede', '한 줄 소개', about.hero.lede, { wide: true, textarea: true, rows: 2 })}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">소개 명판</h2>
+            <span class="panel__tag">profile</span>
+          </div>
+          <div class="fields">
+            ${fields('plate.name', '이름', about.plate.name)}
+            ${fields('plate.nameEn', '영문 이름', about.plate.nameEn)}
+            ${fields('plate.tagline', '태그라인', about.plate.tagline, { wide: true })}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">소개 문단</h2>
+            <span class="panel__tag">intro</span>
+          </div>
+          ${fields('intro.heading', '소제목', about.intro.heading, { wide: true })}
+          <div class="repeat" data-about-list="intro.paragraphs">
+            ${about.intro.paragraphs.map((paragraph, index) => repeatRow(paragraph, index, '문단')).join('')}
+          </div>
+          <button class="btn btn--sm repeat__add" type="button" data-about-add="intro.paragraphs">+ 문단 추가</button>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">이런 걸 써요</h2>
+            <span class="panel__tag">topics</span>
+          </div>
+          ${fields('topics.heading', '소제목', about.topics.heading, { wide: true })}
+          <p class="panel__note">목록 항목은 카테고리 설정(<code>src/config.ts</code>)을 그대로 씁니다. 여기서는 소제목만 바꿀 수 있어요.</p>
+        </section>
+
+        <section class="panel panel--wide">
+          <div class="panel__head">
+            <h2 class="panel__title">글을 쓰는 기준</h2>
+            <span class="panel__tag">rules</span>
+          </div>
+          ${fields('rules.heading', '소제목', about.rules.heading, { wide: true })}
+          <div class="repeat" data-about-list="rules.items">
+            ${about.rules.items.map((item, index) => repeatRow(item, index, '기준')).join('')}
+          </div>
+          <button class="btn btn--sm repeat__add" type="button" data-about-add="rules.items">+ 기준 추가</button>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">수익화 고지</h2>
+            <span class="panel__tag">disclosure</span>
+          </div>
+          <div class="fields">
+            ${fields('monetization.heading', '소제목', about.monetization.heading, { wide: true })}
+            ${fields('monetization.paragraph', '본문', about.monetization.paragraph, { wide: true, textarea: true, rows: 4 })}
+          </div>
+        </section>
+
+        <section class="panel panel--wide">
+          <div class="panel__head">
+            <h2 class="panel__title">자주 묻는 것</h2>
+            <span class="panel__tag">FAQ</span>
+          </div>
+          ${fields('faq.heading', '소제목', about.faq.heading, { wide: true })}
+          <div class="repeat" data-about-list="faq.items">
+            ${about.faq.items.map((item, index) => faqRow(item, index)).join('')}
+          </div>
+          <button class="btn btn--sm repeat__add" type="button" data-about-add="faq.items">+ 질문 추가</button>
+          <p class="panel__note">질문과 답을 모두 채운 항목만 사이트에 보이고 검색엔진 FAQ 데이터로도 들어갑니다.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">마지막 인사</h2>
+            <span class="panel__tag">contact</span>
+          </div>
+          <div class="fields">
+            ${fields('contact.heading', '소제목', about.contact.heading, { wide: true })}
+            ${fields('contact.paragraph', '본문', about.contact.paragraph, { wide: true, textarea: true, rows: 4 })}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">반영 정보</h2>
+            <span class="panel__tag">meta</span>
+          </div>
+          <div class="fields">
+            ${fields('updated', '마지막 정리 날짜', about.updated, { hint: 'YYYY-MM-DD', placeholder: todayInput() })}
+          </div>
+          <p class="panel__note">사이트 화면에는 나오지 않고, 기록용으로만 남습니다.</p>
+        </section>
+      </div>
+
+      <div class="about-admin__foot">
+        <button class="btn btn--primary" type="button" id="about-save-2">저장 (커밋)</button>
+        <span class="about-admin__foot-note">저장하면 GitHub에 커밋되고 자동 배포가 시작돼요.</span>
+      </div>
+
+      <div class="seo__deploy" id="about-deploy" hidden></div>
+    </div>
+  `;
+}
+
+function renderAbout(data) {
+  state.section = 'about';
+  state.view = 'about';
+  const about = data || state.about?.data || aboutDefaults();
+  if (!state.about) state.about = { data: about, sha: '', exists: false };
+  state.about.data = about;
+
+  document.title = '소개 페이지 · 쿼구리 관리자';
+  markSection('about');
+  setWorkspace(aboutPageHtml(about));
+  bindAbout();
+}
+
+function collectAboutForm() {
+  const base = state.about?.data || aboutDefaults();
+  const data = JSON.parse(JSON.stringify(base));
+
+  document.querySelectorAll('[data-about]').forEach((field) => {
+    const path = field.dataset.about;
+    if (path) setByPath(data, path, field.value);
+  });
+
+  document.querySelectorAll('[data-about-list]').forEach((box) => {
+    const path = box.dataset.aboutList;
+    if (!path) return;
+    const rows = Array.from(box.children).filter((node) => node.classList.contains('repeat__row'));
+    if (path === 'faq.items') {
+      setByPath(
+        data,
+        path,
+        rows.map((row) => ({
+          q: row.querySelector('[data-faq-q]')?.value ?? '',
+          a: row.querySelector('[data-faq-a]')?.value ?? '',
+        })),
+      );
+    } else {
+      setByPath(
+        data,
+        path,
+        rows.map((row) => {
+          const field = row.querySelector('[data-about-list-value]');
+          return field ? field.value : '';
+        }),
+      );
+    }
+  });
+
+  return data;
+}
+
+function bindAbout() {
+  const stateLabel = document.getElementById('about-state');
+  const setState = (message, dirty) => {
+    state.aboutDirty = dirty;
+    if (stateLabel) {
+      stateLabel.textContent = message;
+      stateLabel.classList.toggle('is-dirty', dirty);
+    }
+  };
+
+  const form = document.querySelector('.about-admin');
+  form?.addEventListener('input', () => setState('저장 전 변경', true));
+
+  document.querySelectorAll('[data-about-add]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const data = collectAboutForm();
+      const path = button.dataset.aboutAdd;
+      const list = Array.isArray(getByPath(data, path)) ? [...getByPath(data, path)] : [];
+      list.push(path === 'faq.items' ? { q: '', a: '' } : '');
+      setByPath(data, path, list);
+      state.aboutDirty = true;
+      renderAbout(data);
+      const rows = document.querySelectorAll(`[data-about-list="${path}"] .repeat__row`);
+      rows[rows.length - 1]?.querySelector('input, textarea')?.focus();
+    });
+  });
+
+  document.querySelectorAll('[data-about-remove]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const row = button.closest('.repeat__row');
+      const box = row?.parentElement;
+      const path = box?.dataset.aboutList;
+      if (!row || !box || !path) return;
+      const data = collectAboutForm();
+      const rows = Array.from(box.children).filter((node) => node.classList.contains('repeat__row'));
+      const index = rows.indexOf(row);
+      const list = Array.isArray(getByPath(data, path)) ? [...getByPath(data, path)] : [];
+      list.splice(index, 1);
+      setByPath(data, path, list);
+      state.aboutDirty = true;
+      renderAbout(data);
+    });
+  });
+
+  document.getElementById('about-reload')?.addEventListener('click', () => {
+    if (state.aboutDirty && !window.confirm('저장하지 않은 변경이 있어요. 불러온 내용으로 되돌릴까요?')) return;
+    state.aboutDirty = false;
+    loadAbout(true);
+  });
+
+  document.getElementById('about-save')?.addEventListener('click', saveAbout);
+  document.getElementById('about-save-2')?.addEventListener('click', saveAbout);
+}
+
+async function saveAbout() {
+  if (!state.gh) return;
+  const data = collectAboutForm();
+  const errors = validateAbout(data);
+  if (errors.length) {
+    toast(errors[0], 'error');
+    return;
+  }
+
+  const buttons = [document.getElementById('about-save'), document.getElementById('about-save-2')].filter(Boolean);
+  const stateLabel = document.getElementById('about-state');
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.textContent = '커밋 중…';
+  });
+  if (stateLabel) stateLabel.textContent = '커밋 중…';
+
+  const clean = cleanAbout(data);
+  const text = serializeAbout(clean);
+
+  try {
+    const result = await state.gh.putFile(ABOUT_PATH, {
+      text,
+      message: 'content: 소개 페이지 수정',
+      sha: state.about?.sha || undefined,
+      branch: BRANCH,
+    });
+
+    state.about = {
+      data: clean,
+      sha: result?.content?.sha ?? state.about?.sha ?? '',
+      exists: true,
+    };
+    state.aboutDirty = false;
+
+    // 비어 있던 줄을 덜어 낸 결과를 화면에도 그대로 반영합니다.
+    renderAbout(clean);
+
+    const freshLabel = document.getElementById('about-state');
+    if (freshLabel) {
+      freshLabel.textContent = '저장됨 · 배포 대기';
+      freshLabel.classList.remove('is-dirty');
+    }
+
+    const box = document.getElementById('about-deploy');
+    if (box) {
+      box.hidden = false;
+      box.innerHTML = `
+        <p class="deploy__title">커밋 완료 · 자동 배포가 시작됩니다</p>
+        <p>보통 1~3분 뒤 소개 페이지에 반영돼요.</p>
+        <div class="deploy__links">
+          <a href="${esc(state.gh.actionsUrl())}" target="_blank" rel="noopener noreferrer">배포 진행 상황 ↗</a>
+          <a href="${esc(aboutUrl())}" target="_blank" rel="noopener noreferrer">사이트에서 보기 ↗</a>
+          <a href="${esc(state.gh.fileUrl(ABOUT_PATH, BRANCH))}" target="_blank" rel="noopener noreferrer">커밋된 파일 ↗</a>
+        </div>
+      `;
+    }
+
+    toast('소개 페이지를 저장했어요. 1~3분 안에 반영됩니다.');
+  } catch (error) {
+    console.error(error);
+    toast(error?.message || '소개 페이지를 저장하지 못했어요.', 'error');
+    const errorLabel = document.getElementById('about-state');
+    if (errorLabel) errorLabel.textContent = '저장 실패';
+  } finally {
+    buttons.forEach((button) => {
+      button.disabled = false;
+      button.textContent = '저장 (커밋)';
+    });
+  }
+}
+
 /* ── 시작 ─────────────────────────────────────────────── */
 let shortcutBound = false;
 function bindShortcut() {
@@ -1150,6 +1795,12 @@ function bindShortcut() {
   shortcutBound = true;
   document.addEventListener('keydown', (event) => {
     if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 's') return;
+    if (state.view === 'about') {
+      event.preventDefault();
+      const saveAboutButton = document.getElementById('about-save');
+      if (saveAboutButton && !saveAboutButton.disabled) saveAbout();
+      return;
+    }
     if (state.view !== 'editor') return;
     event.preventDefault();
     const get = (id) => document.getElementById(id);
