@@ -2178,3 +2178,24 @@ main {
 .cover--row .cover__no {
   bottom: 8px;
 }
+
+/* 목록 썸네일은 조금 넉넉하게, 행 커버는 카테고리+번호만 */
+.list-item {
+  grid-template-columns: 120px minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+  .list-item {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+}
+
+.cover--row .cover__foot {
+  display: none;
+}
+
+.cover--row .cover__no {
+  font-size: 2.8rem;
+  right: 12px;
+  bottom: 6px;
+}
