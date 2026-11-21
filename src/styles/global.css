@@ -2999,8 +2999,37 @@ body {
 .cover__no {
   font-family: var(--font-display);
   font-weight: 800;
-  color: color-mix(in srgb, var(--accent, #0e9f79) 52%, transparent);
-  opacity: 0.35;
+  color: color-mix(in srgb, var(--accent, #0e9f79) 46%, var(--bg-elev));
+  opacity: 0.62;
+}
+
+.cover__badge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 2px solid var(--outline);
+  border-radius: 16px;
+  background: var(--bg-elev);
+  box-shadow: 3px 3px 0 var(--pop-shadow);
+  font-size: 1.45rem;
+  line-height: 1;
+  transform: translate(-50%, -50%) rotate(-6deg);
+}
+
+.cover--hero .cover__badge {
+  width: 92px;
+  height: 92px;
+  border-radius: 26px;
+  font-size: 2.5rem;
+  transform: translate(-50%, -46%) rotate(-7deg);
+}
+
+.cover--row .cover__badge {
+  display: none;
 }
 
 .cover__mark {
@@ -3413,4 +3442,18 @@ body {
   body {
     background-attachment: scroll;
   }
+}
+
+/* 소개 페이지: 머리·본문을 같은 폭으로 맞춤 */
+.about-page .breadcrumb,
+.about-page .page-head {
+  max-width: 740px;
+  margin-inline: auto;
+}
+
+/* 소개·개인정보처럼 본문이 좁은 페이지: 머리와 본문 폭을 맞춤 */
+.container:has(> .page-prose) > .breadcrumb,
+.container:has(> .page-prose) > .page-head {
+  max-width: 740px;
+  margin-inline: auto;
 }

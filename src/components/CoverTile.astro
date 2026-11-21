@@ -28,6 +28,7 @@ const { category, index, title, variant = 'card' } = Astro.props;
     <span class="cover__cat">{category.short}</span>
     {title && <span class="cover__title">{title}</span>}
   </span>
+  <span class="cover__badge" aria-hidden="true">{category.emoji}</span>
   <span class="cover__foot">
     <span class="cover__rule"></span>
     <span class="cover__mark">quoguri</span>
