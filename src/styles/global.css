@@ -2199,3 +2199,21 @@ main {
   right: 12px;
   bottom: 6px;
 }
+
+/* 다크 모드: 카테고리 색을 배경에 맞춰 밝게 */
+[data-theme='dark'] .category-card__label,
+[data-theme='dark'] .chip--category,
+[data-theme='dark'] .post-header__no,
+[data-theme='dark'] .cover {
+  color: color-mix(in oklab, var(--accent, #9cc4ad) 42%, #f4efe6);
+}
+
+[data-theme='dark'] .chip--category {
+  background: color-mix(in srgb, var(--accent, #3f6b5a) 22%, var(--bg-elev));
+}
+
+[data-theme='dark'] .cover {
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent, #3f6b5a) 26%, transparent) 0%, transparent 60%),
+    linear-gradient(168deg, color-mix(in srgb, var(--accent, #3f6b5a) 16%, var(--bg-elev)) 0%, var(--bg-elev) 76%);
+}
