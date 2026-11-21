@@ -1253,7 +1253,7 @@ function applyMarkdown(kind, textarea) {
 }
 
 /** 리뷰 블록(```verdict / ```proscons / ```price)을 커서 자리에 넣습니다. */
-function applyReviewBlock(kind, textarea) {
+export function applyReviewBlock(kind, textarea) {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const value = textarea.value;
@@ -1264,7 +1264,7 @@ function applyReviewBlock(kind, textarea) {
   const before = value.slice(0, start);
   const after = value.slice(end);
   const lead = !before || before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
-  const tail = !after ? '\n' : after.startsWith('\n') ? '\n' : '\n\n';
+  const tail = !after ? '\n' : after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
   const insert = `${lead}${snippet}${tail}`;
 
   textarea.value = before + insert + after;

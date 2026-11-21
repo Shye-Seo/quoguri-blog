@@ -23,6 +23,7 @@ import {
   needsCoupangDisclosure,
 } from '../src/lib/disclosure.js';
 import { parsePost, serializePost } from '../src/admin/frontmatter.js';
+import { applyReviewBlock } from '../src/admin/main.js';
 
 test('세 가지 펜스만 리뷰 블록으로 본다', () => {
   for (const lang of ['verdict', 'proscons', 'price', ' Price ']) {
@@ -138,4 +139,30 @@ test('프런트매터 coupang: true가 저장·재읽기에서 유지된다', ()
   const off = serializePost({ title: '일반 글', description: '설명', pubDate: '2026-11-21', category: 'tech', tags: [], coupang: false }, '본문');
   assert.match(off, /coupang: false/);
   assert.equal(parsePost(off).data.coupang, false);
+});
+
+/** 편집기 textarea를 흥내 낸 최소 객체 */
+const fakeTextarea = (value, start = value.length, end = start) => ({
+  value,
+  selectionStart: start,
+  selectionEnd: end,
+  focus() {},
+  setSelectionRange() {},
+});
+
+test('툴바 버튼은 커서 자리에 빈 줄을 두고 블록을 넣는다', () => {
+  const textarea = fakeTextarea('첫 문단', 4, 4);
+  applyReviewBlock('verdict', textarea);
+  assert.ok(textarea.value.includes('```verdict'), '블록이 들어가야 합니다');
+  assert.match(textarea.value, /첫 문단\n\n```verdict\n/);
+  assert.ok(textarea.value.trimEnd().endsWith('```'));
+});
+
+test('툴바 버튼: 선택 영역이 있으면 그 자리를 블록으로 대체한다', () => {
+  const textarea = fakeTextarea('앞\n\n바꿀 문단\n\n뒤', 3, 3 + '바꿀 문단'.length);
+  applyReviewBlock('price', textarea);
+  assert.ok(!textarea.value.includes('바꿀 문단'));
+  assert.match(textarea.value, /```price\nprice: 89,000원/);
+  assert.match(textarea.value, /앞\n\n```price/);
+  assert.match(textarea.value, /```\n\n뒤/);
 });
