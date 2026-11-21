@@ -3457,3 +3457,21 @@ body {
   max-width: 740px;
   margin-inline: auto;
 }
+
+/* 태블릿 폭에서 검색을 펼칠 때 네비게이션과 겹치지 않게 */
+@media (min-width: 641px) and (max-width: 900px) {
+  .site-header.is-search-open .site-nav {
+    display: none;
+  }
+
+  .site-header.is-search-open .header-search {
+    width: clamp(200px, 45vw, 360px);
+  }
+}
+
+/* iOS에서 검색창 포커스 시 화면이 확대되지 않도록 16px 유지 */
+@media (max-width: 640px) {
+  .header-search input {
+    font-size: 16px;
+  }
+}

@@ -150,6 +150,7 @@ const parseRepoInput = (value) => {
 function renderLogin(message = '') {
   document.title = '로그인 · 쿼구리 관리자';
   state.view = 'login';
+  state.section = 'posts';
   root().innerHTML = `
     <div class="login">
       <div class="login__card">
