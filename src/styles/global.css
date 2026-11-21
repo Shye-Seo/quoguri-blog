@@ -2160,3 +2160,21 @@ main {
     transition: none;
   }
 }
+
+/* 카드·대표 글 안의 카테고리 배지는 내용만큼만 */
+.post-card__body > .chip,
+.featured__body > .chip,
+.list-item .chip {
+  align-self: flex-start;
+  width: fit-content;
+}
+
+/* 커버 번호가 카드 경계에 붙지 않게 */
+.cover--card .cover__no {
+  bottom: 16px;
+  right: 14px;
+}
+
+.cover--row .cover__no {
+  bottom: 8px;
+}
