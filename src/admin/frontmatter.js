@@ -18,6 +18,7 @@ const FIELD_ORDER = [
   'draft',
   'series',
   'seoTitle',
+  'coupang',
 ];
 
 function unquote(value) {

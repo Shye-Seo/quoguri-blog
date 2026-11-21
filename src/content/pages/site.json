@@ -1,0 +1,25 @@
+{
+  "contactEmail": "",
+  "verification": {
+    "google": "",
+    "naver": ""
+  },
+  "analytics": {
+    "ga4": ""
+  },
+  "adsense": {
+    "client": "",
+    "slotArticle": "",
+    "slotHome": ""
+  },
+  "coupang": {
+    "partnerId": ""
+  },
+  "socials": {
+    "instagram": "",
+    "youtube": "",
+    "naverBlog": "",
+    "github": ""
+  },
+  "updated": "2026-11-21"
+}

@@ -168,6 +168,45 @@ else if (existsSync(aboutPage)) {
   if (about.hero?.title && !html.includes(about.hero.title)) problems.push('about/index.html — about.json의 히어로 제목이 반영되지 않음');
 }
 
+/* ── 5-4. 개인정보처리방침 · 운영자 도구 ──────────────── */
+const privacyPage = path.join(DIST, 'privacy/index.html');
+if (!existsSync(privacyPage)) problems.push('privacy/index.html 없음');
+else {
+  const html = readFileSync(privacyPage, 'utf8');
+  for (const [needle, label] of [
+    ['Google Analytics', 'GA4 안내'],
+    ['Google AdSense', '애드센스 안내'],
+    ['쿠팡 파트너스', '쿠팡 파트너스 안내'],
+    ['쿠키', '쿠키 안내'],
+  ]) {
+    if (!html.includes(needle)) problems.push(`privacy/index.html — ${label} 없음`);
+  }
+  if (/mailto:"/.test(html)) problems.push('privacy/index.html — 빈 mailto 링크');
+}
+
+const adminBundle = textFiles.find((file) => file.startsWith(DIST) && /_astro\/.*\.js$/.test(file) && readFileSync(file, 'utf8').includes('admin-root'));
+if (!adminBundle) problems.push('관리자 스크립트 번들을 찾지 못함');
+else {
+  const js = readFileSync(adminBundle, 'utf8');
+  for (const [needle, label] of [
+    ['사이트 설정', '사이트 설정 탭'],
+    ['review-verdict', '리뷰 블록 렌더러'],
+    ['coupang-notice', '쿠팡 공시 배너'],
+    ['site.json', '사이트 설정 파일 경로'],
+  ]) {
+    if (!js.includes(needle)) problems.push(`${path.relative(DIST, adminBundle)} — ${label} 없음`);
+  }
+}
+
+/* ── 5-5. 문구와 실제 상태가 어긋나지 않는지 ───────────── */
+const COPY_PAGES = ['index.html', 'about/index.html'];
+for (const name of COPY_PAGES) {
+  const file = path.join(DIST, name);
+  if (!existsSync(file)) continue;
+  const html = readFileSync(file, 'utf8');
+  if (/<span[^>]*>\s*직접 찍은 사진만\s*<\/span>/.test(html)) problems.push(`${name} — 사진이 없는데 '직접 찍은 사진만' 문구`);
+}
+
 /* ── 6. 공개 페이지에 관리자 링크가 없는지 ─────────────── */
 for (const file of pages) {
   const name = rel(file);

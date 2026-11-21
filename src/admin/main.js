@@ -29,6 +29,17 @@ import {
   publicPathFor,
   validateImageFile,
 } from './images.js';
+import {
+  SETTINGS_PATH,
+  cleanSettings,
+  parseSettings,
+  serializeSettings,
+  settingsDefaults,
+  settingsSummary,
+  validateSettings,
+} from './settings.js';
+import { COUPANG_DISCLOSURE, coupangNoticeHtml, needsCoupangDisclosure } from '../lib/disclosure.js';
+import { reviewSnippet } from '../lib/review-blocks.js';
 
 const CONTENT_DIR = 'src/content/blog';
 const BRANCH = 'main';
@@ -60,6 +71,8 @@ const state = {
   section: 'posts',
   about: null,
   aboutDirty: false,
+  settings: null,
+  settingsDirty: false,
 };
 
 const root = () => document.getElementById('admin-root');
@@ -314,6 +327,7 @@ function renderApp() {
           <nav class="topbar__tabs" aria-label="관리자 메뉴">
             <button class="topbar__tab${state.section === 'posts' ? ' is-active' : ''}" type="button" data-section="posts">글 관리</button>
             <button class="topbar__tab${state.section === 'about' ? ' is-active' : ''}" type="button" data-section="about">소개 페이지</button>
+            <button class="topbar__tab${state.section === 'settings' ? ' is-active' : ''}" type="button" data-section="settings">사이트 설정</button>
           </nav>
         </div>
         <div class="topbar__right">
@@ -328,14 +342,16 @@ function renderApp() {
   `;
 
   document.getElementById('logout')?.addEventListener('click', () => {
-    if ((state.dirty || state.aboutDirty) && !window.confirm('저장하지 않은 변경이 있어요. 그래도 로그아웃할까요?')) return;
+    if ((state.dirty || state.aboutDirty || state.settingsDirty) && !window.confirm('저장하지 않은 변경이 있어요. 그래도 로그아웃할까요?')) return;
     state.dirty = false;
     state.aboutDirty = false;
+    state.settingsDirty = false;
     clearSession();
     state.gh = null;
     state.user = null;
     state.posts = [];
     state.about = null;
+    state.settings = null;
     renderLogin();
   });
 
@@ -343,7 +359,7 @@ function renderApp() {
     button.addEventListener('click', () => switchSection(button.dataset.section));
   });
 
-  window.onbeforeunload = () => (state.dirty || state.aboutDirty ? true : undefined);
+  window.onbeforeunload = () => (state.dirty || state.aboutDirty || state.settingsDirty ? true : undefined);
 }
 
 function markSection(section) {
@@ -356,15 +372,20 @@ function markSection(section) {
 
 function switchSection(next) {
   if (!next || next === state.section) return;
-  if ((state.dirty || state.aboutDirty) && !window.confirm('저장하지 않은 변경이 있어요. 이동할까요?')) return;
+  if ((state.dirty || state.aboutDirty || state.settingsDirty) && !window.confirm('저장하지 않은 변경이 있어요. 이동할까요?')) return;
   const leftAbout = state.section === 'about' && next !== 'about';
+  const leftSettings = state.section === 'settings' && next !== 'settings';
   state.dirty = false;
   state.aboutDirty = false;
+  state.settingsDirty = false;
   state.current = null;
   if (leftAbout) state.about = null;
+  if (leftSettings) state.settings = null;
   markSection(next);
   if (next === 'about') {
     loadAbout();
+  } else if (next === 'settings') {
+    loadSettings();
   } else if (state.posts.length) {
     renderList();
   } else {
@@ -651,6 +672,7 @@ function emptyPost() {
       draft: true,
       series: '',
       seoTitle: '',
+      coupang: false,
     },
     body: '',
     isNew: true,
@@ -776,6 +798,7 @@ function editorHtml(post) {
               <div class="checks">
                 <label class="check"><input id="f-draft" type="checkbox"${data.draft ? ' checked' : ''} /><span>임시저장 (draft)</span></label>
                 <label class="check"><input id="f-featured" type="checkbox"${data.featured ? ' checked' : ''} /><span>홈 대표 글로</span></label>
+                <label class="check"><input id="f-coupang" type="checkbox"${data.coupang ? ' checked' : ''} /><span>쿠팡 파트너스 글 (본문 맨 위 공시 배너 자동)</span></label>
               </div>
             </div>
           </div>
@@ -795,6 +818,10 @@ function editorHtml(post) {
               <button type="button" data-md="quote" title="인용">인용</button>
               <button type="button" data-md="table" title="표">표</button>
               <button type="button" data-md="hr" title="구분선">―</button>
+              <span class="write__sep" aria-hidden="true"></span>
+              <button type="button" data-block="verdict" title="한 줄 결론 박스">결론</button>
+              <button type="button" data-block="proscons" title="장점·단점 비교 박스">장단점</button>
+              <button type="button" data-block="price" title="가격 기준일·구매처 배지">가격</button>
             </div>
             <div class="write__panes">
               <textarea id="f-body" class="write__input" spellcheck="false" placeholder="## 소제목부터 시작해 보세요.
@@ -858,6 +885,7 @@ function renderEditor() {
   const series = $('f-series');
   const draft = $('f-draft');
   const featured = $('f-featured');
+  const coupangToggle = $('f-coupang');
   const keyword = $('seo-keyword');
   const stateLabel = $('editor-state');
   const slugLabel = $('editor-slug');
@@ -888,9 +916,11 @@ function renderEditor() {
   let timer = null;
   const update = () => {
     const bodyText = body.value;
+    const showCoupangNotice = Boolean(coupangToggle?.checked) || needsCoupangDisclosure({ body: bodyText });
+    const notice = showCoupangNotice ? coupangNoticeHtml(COUPANG_DISCLOSURE) : '';
     preview.innerHTML = bodyText.trim()
-      ? renderMarkdown(bodyText)
-      : '<p class="preview__empty">왼쪽에 글을 쓰면 여기에 그대로 보여요.</p>';
+      ? `${notice}${renderMarkdown(bodyText)}`
+      : `<p class="preview__empty">왼쪽에 글을 쓰면 여기에 그대로 보여요.</p>`;
 
     titleCount.textContent = `${Array.from(title.value).length}자`;
     descCount.textContent = `${Array.from(description.value).length}자 · 80~150자 권장`;
@@ -941,8 +971,11 @@ function renderEditor() {
     });
     coverFile.value = '';
   });
-  [category, draft, featured].forEach((input) => {
-    input.addEventListener('change', markDirty);
+  [category, draft, featured, coupangToggle].forEach((input) => {
+    input?.addEventListener('change', () => {
+      markDirty();
+      scheduleUpdate();
+    });
   });
 
   $('slug-from-title')?.addEventListener('click', () => {
@@ -964,6 +997,14 @@ function renderEditor() {
     });
   });
 
+  document.querySelectorAll('[data-block]').forEach((button) => {
+    button.addEventListener('click', () => {
+      applyReviewBlock(button.dataset.block, body);
+      markDirty();
+      scheduleUpdate();
+    });
+  });
+
   $('back')?.addEventListener('click', () => {
     if (state.dirty && !window.confirm('저장하지 않은 변경이 있어요. 목록으로 돌아갈까요?')) return;
     state.dirty = false;
@@ -971,7 +1012,7 @@ function renderEditor() {
     renderList();
   });
 
-  $('save')?.addEventListener('click', () => savePost({ slug, title, description, category, tags, pubdate, updated, cover, coverAlt, series, draft, featured, body }));
+  $('save')?.addEventListener('click', () => savePost({ slug, title, description, category, tags, pubdate, updated, cover, coverAlt, series, draft, featured, coupang: coupangToggle, body }));
 
   update();
   if (post.isNew) title.focus();
@@ -1211,6 +1252,27 @@ function applyMarkdown(kind, textarea) {
   textarea.setSelectionRange(caret, caret);
 }
 
+/** 리뷰 블록(```verdict / ```proscons / ```price)을 커서 자리에 넣습니다. */
+function applyReviewBlock(kind, textarea) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const value = textarea.value;
+  const snippet = reviewSnippet(kind);
+  if (!snippet) return;
+
+  // 앞뒤로 빈 줄을 두어 코드 펜스가 문단에 붙지 않게 합니다.
+  const before = value.slice(0, start);
+  const after = value.slice(end);
+  const lead = !before || before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
+  const tail = !after ? '\n' : after.startsWith('\n') ? '\n' : '\n\n';
+  const insert = `${lead}${snippet}${tail}`;
+
+  textarea.value = before + insert + after;
+  textarea.focus();
+  const caret = start + insert.length;
+  textarea.setSelectionRange(caret, caret);
+}
+
 /* ── 저장·삭제 ────────────────────────────────────────── */
 function collectPost(form) {
   const title = form.title.value.trim();
@@ -1243,6 +1305,7 @@ function collectPost(form) {
     coverAlt: form.coverAlt.value.trim(),
     featured: form.featured.checked,
     draft: form.draft.checked,
+    coupang: form.coupang ? form.coupang.checked : Boolean(state.current.data.coupang),
     series: form.series.value.trim(),
   };
 
@@ -1789,6 +1852,320 @@ async function saveAbout() {
   }
 }
 
+/* ── 사이트 설정 (src/content/pages/site.json) ───────────── */
+async function loadSettings(force = false) {
+  state.section = 'settings';
+  markSection('settings');
+  const workspace = document.getElementById('workspace');
+  if (!workspace) return;
+
+  if (!force && state.settings) {
+    renderSettings();
+    return;
+  }
+
+  workspace.innerHTML = `
+    <div class="loading">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>사이트 설정을 불러오는 중…</p>
+    </div>
+  `;
+
+  try {
+    let file = null;
+    try {
+      file = await state.gh.getFile(SETTINGS_PATH);
+    } catch (error) {
+      if (!(error instanceof GitHubError) || error.status !== 404) throw error;
+    }
+
+    const data = file ? parseSettings(file.text) : settingsDefaults();
+    state.settings = { data, sha: file?.sha ?? '', exists: Boolean(file) };
+    state.settingsDirty = false;
+    renderSettings();
+  } catch (error) {
+    console.error(error);
+    workspace.innerHTML = `
+      <div class="empty">
+        <p class="empty__title">사이트 설정을 불러오지 못했어요</p>
+        <p>${esc(error?.message || '알 수 없는 오류')}</p>
+        <button class="btn" type="button" id="settings-retry">다시 시도</button>
+      </div>
+    `;
+    document.getElementById('settings-retry')?.addEventListener('click', () => loadSettings(true));
+  }
+}
+
+export function settingsPageHtml(settings) {
+  const field = (path, label, value, opts = {}) => `
+    <label class="field${opts.wide ? ' field--wide' : ''}">
+      <span class="field__label">${label}${opts.hint ? ` <em>${opts.hint}</em>` : ''}</span>
+      <input type="text" data-settings="${path}" placeholder="${esc(opts.placeholder || '')}" value="${esc(value)}" autocomplete="off" spellcheck="false" />
+    </label>
+  `;
+
+  const summary = settingsSummary(settings);
+  const summaryKey = {
+    google: 'verification.google',
+    naver: 'verification.naver',
+    ga4: 'analytics.ga4',
+    adsense: 'adsense.client',
+    contact: 'contactEmail',
+  };
+
+  return `
+    <div class="about-admin settings-admin">
+      <div class="listview__head">
+        <div>
+          <h1 class="listview__title">사이트 설정</h1>
+          <p class="listview__sub">저장소 ${esc(SETTINGS_PATH)} · 저장(커밋)하면 몇 분 뒤 사이트에 반영돼요</p>
+        </div>
+        <div class="listview__actions">
+          <button class="btn btn--ghost" type="button" id="settings-reload">불러온 내용으로 되돌리기</button>
+          <button class="btn btn--primary" type="button" id="settings-save">저장 (커밋)</button>
+        </div>
+      </div>
+
+      <p class="about-admin__state" id="settings-state">${state.settingsDirty ? '저장 전 변경' : '불러옴'}</p>
+
+      <div class="about-admin__grid">
+        <section class="panel panel--wide">
+          <div class="panel__head">
+            <h2 class="panel__title">지금 사이트에 들어가는 값</h2>
+            <span class="panel__tag">live</span>
+          </div>
+          <dl class="seo__stats" id="settings-summary">
+            ${summary
+              .map(
+                (item) => `<div class="seo__stat"><dt>${esc(item.label)}</dt><dd data-summary="${summaryKey[item.key] || ''}">${item.value ? esc(item.value) : '비어 있음'}</dd></div>`,
+              )
+              .join('')}
+          </dl>
+          <p class="panel__note">
+            GitHub 저장소 변수(<code>PUBLIC_GA4_ID</code> 등)가 있으면 그 값이 우선합니다.
+            비워 둔 항목은 사이트에 해당 태그·링크가 아예 나오지 않아요.
+          </p>
+        </section>
+
+        <section class="panel panel--wide">
+          <div class="panel__head">
+            <h2 class="panel__title">검색엔진 소유확인</h2>
+            <span class="panel__tag">verification</span>
+          </div>
+          <div class="fields">
+            ${field('verification.google', '구글 서치콘솔', settings.verification.google, { wide: true, hint: 'HTML 태그를 통째로 붙여 넣어도 돼요', placeholder: 'content 값 또는 <meta name="google-site-verification" …>' })}
+            ${field('verification.naver', '네이버 서치어드바이저', settings.verification.naver, { wide: true, hint: 'HTML 태그를 통째로 붙여 넣어도 돼요', placeholder: 'content 값 또는 <meta name="naver-site-verification" …>' })}
+          </div>
+          <p class="panel__note">저장하면 모든 페이지의 &lt;head&gt;에 소유확인 메타 태그가 들어가요. 값이 비면 태그도 나오지 않습니다.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">문의 메일</h2>
+            <span class="panel__tag">contact</span>
+          </div>
+          <div class="fields">
+            ${field('contactEmail', '받는 주소', settings.contactEmail, { wide: true, placeholder: 'hello@quoguri.com' })}
+          </div>
+          <p class="panel__note">소개·개인정보처리방침·푸터에 표시돼요. 비워 두면 빈 mailto 링크 없이 다른 안내로 대신합니다.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">방문 분석 (GA4)</h2>
+            <span class="panel__tag">analytics</span>
+          </div>
+          <div class="fields">
+            ${field('analytics.ga4', '측정 ID', settings.analytics.ga4, { wide: true, hint: 'G-로 시작', placeholder: 'G-ABCDE12345' })}
+          </div>
+          <p class="panel__note">값을 넣으면 모든 페이지에 gtag 스크립트가 들어가고, 개인정보처리방침의 Google Analytics 절도 함께 안내돼요.</p>
+        </section>
+
+        <section class="panel panel--wide">
+          <div class="panel__head">
+            <h2 class="panel__title">Google AdSense</h2>
+            <span class="panel__tag">adsense</span>
+          </div>
+          <div class="fields">
+            ${field('adsense.client', '게시자 ID', settings.adsense.client, { hint: 'ca-pub-…', placeholder: 'ca-pub-1234567890123456' })}
+            ${field('adsense.slotArticle', '본문 광고 슬롯', settings.adsense.slotArticle, { hint: '숫자', placeholder: '1234567890' })}
+            ${field('adsense.slotHome', '홈 하단 광고 슬롯', settings.adsense.slotHome, { hint: '숫자', placeholder: '1234567890' })}
+          </div>
+          <p class="panel__note">게시자 ID 형식(ca-pub- + 숫자 16자리)이 맞아야 애드센스 승인 후 광고 스크립트가 삽입됩니다.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">쿠팡 파트너스</h2>
+            <span class="panel__tag">coupang</span>
+          </div>
+          <div class="fields">
+            ${field('coupang.partnerId', '파트너 ID', settings.coupang.partnerId, { wide: true, hint: '선택', placeholder: 'AF1234567' })}
+          </div>
+          <p class="panel__note">제휴 고지 문구는 고정이에요. 쿠팡 글로 표시한 글은 본문 맨 위에 자동으로 배너가 붙습니다.</p>
+        </section>
+
+        <section class="panel panel--wide">
+          <div class="panel__head">
+            <h2 class="panel__title">소셜 링크</h2>
+            <span class="panel__tag">socials</span>
+          </div>
+          <div class="fields">
+            ${field('socials.instagram', '인스타그램', settings.socials.instagram, { placeholder: 'https://instagram.com/…' })}
+            ${field('socials.youtube', '유튜브', settings.socials.youtube, { placeholder: 'https://youtube.com/@…' })}
+            ${field('socials.naverBlog', '네이버 블로그', settings.socials.naverBlog, { placeholder: 'https://blog.naver.com/…' })}
+            ${field('socials.github', '깃허브', settings.socials.github, { placeholder: 'https://github.com/…' })}
+          </div>
+          <p class="panel__note">https:// 로 시작하는 주소만 푸터에 링크로 걸립니다. 비우면 표시하지 않아요.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">반영 정보</h2>
+            <span class="panel__tag">meta</span>
+          </div>
+          <div class="fields">
+            ${field('updated', '마지막 정리 날짜', settings.updated, { hint: 'YYYY-MM-DD', placeholder: todayInput() })}
+          </div>
+          <p class="panel__note">저장할 때 오늘 날짜로 자동 갱신됩니다.</p>
+        </section>
+      </div>
+
+      <div class="about-admin__foot">
+        <button class="btn btn--primary" type="button" id="settings-save-2">저장 (커밋)</button>
+        <span class="about-admin__foot-note">저장하면 GitHub에 커밋되고 자동 배포가 시작돼요.</span>
+      </div>
+
+      <div class="seo__deploy" id="settings-deploy" hidden></div>
+    </div>
+  `;
+}
+
+function renderSettings(data) {
+  state.section = 'settings';
+  state.view = 'settings';
+  const settings = data || state.settings?.data || settingsDefaults();
+  if (!state.settings) state.settings = { data: settings, sha: '', exists: false };
+  state.settings.data = settings;
+
+  document.title = '사이트 설정 · 쿼구리 관리자';
+  markSection('settings');
+  setWorkspace(settingsPageHtml(settings));
+  bindSettings();
+}
+
+function collectSettingsForm() {
+  const base = state.settings?.data || settingsDefaults();
+  const data = JSON.parse(JSON.stringify(base));
+  document.querySelectorAll('[data-settings]').forEach((input) => {
+    const path = input.dataset.settings;
+    if (path) setByPath(data, path, input.value);
+  });
+  return data;
+}
+
+function bindSettings() {
+  const stateLabel = document.getElementById('settings-state');
+  const setState = (message, dirty) => {
+    state.settingsDirty = dirty;
+    if (stateLabel) {
+      stateLabel.textContent = message;
+      stateLabel.classList.toggle('is-dirty', dirty);
+    }
+  };
+
+  const form = document.querySelector('.settings-admin');
+  form?.addEventListener('input', () => {
+    setState('저장 전 변경', true);
+    const values = collectSettingsForm();
+    for (const item of settingsSummary(values)) {
+      const key = { google: 'verification.google', naver: 'verification.naver', ga4: 'analytics.ga4', adsense: 'adsense.client', contact: 'contactEmail' }[item.key];
+      const cell = key ? document.querySelector(`[data-summary="${key}"]`) : null;
+      if (cell) cell.textContent = item.value || '비어 있음';
+    }
+  });
+
+  document.getElementById('settings-reload')?.addEventListener('click', () => {
+    if (state.settingsDirty && !window.confirm('저장하지 않은 변경이 있어요. 불러온 내용으로 되돌릴까요?')) return;
+    state.settingsDirty = false;
+    loadSettings(true);
+  });
+
+  document.getElementById('settings-save')?.addEventListener('click', saveSettings);
+  document.getElementById('settings-save-2')?.addEventListener('click', saveSettings);
+}
+
+async function saveSettings() {
+  if (!state.gh) return;
+  const data = collectSettingsForm();
+  const errors = validateSettings(data);
+  if (errors.length) {
+    toast(errors[0], 'error');
+    return;
+  }
+
+  const buttons = [document.getElementById('settings-save'), document.getElementById('settings-save-2')].filter(Boolean);
+  const stateLabel = document.getElementById('settings-state');
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.textContent = '커밋 중…';
+  });
+  if (stateLabel) stateLabel.textContent = '커밋 중…';
+
+  const clean = cleanSettings({ ...data, updated: todayInput() });
+  const text = serializeSettings(clean);
+
+  try {
+    const result = await state.gh.putFile(SETTINGS_PATH, {
+      text,
+      message: 'content: 사이트 설정 수정',
+      sha: state.settings?.sha || undefined,
+      branch: BRANCH,
+    });
+
+    state.settings = {
+      data: clean,
+      sha: result?.content?.sha ?? state.settings?.sha ?? '',
+      exists: true,
+    };
+    state.settingsDirty = false;
+
+    renderSettings(clean);
+
+    const freshLabel = document.getElementById('settings-state');
+    if (freshLabel) {
+      freshLabel.textContent = '저장됨 · 배포 대기';
+      freshLabel.classList.remove('is-dirty');
+    }
+
+    const box = document.getElementById('settings-deploy');
+    if (box) {
+      box.hidden = false;
+      box.innerHTML = `
+        <p class="deploy__title">커밋 완료 · 자동 배포가 시작됩니다</p>
+        <p>보통 1~3분 뒤 사이트 전체에 반영돼요.</p>
+        <div class="deploy__links">
+          <a href="${esc(state.gh.actionsUrl())}" target="_blank" rel="noopener noreferrer">배포 진행 상황 ↗</a>
+          <a href="${esc(state.gh.fileUrl(SETTINGS_PATH, BRANCH))}" target="_blank" rel="noopener noreferrer">커밋된 파일 ↗</a>
+          <a href="${esc(basePath())}" target="_blank" rel="noopener noreferrer">사이트에서 보기 ↗</a>
+        </div>
+      `;
+    }
+
+    toast('사이트 설정을 저장했어요. 1~3분 안에 반영됩니다.');
+  } catch (error) {
+    console.error(error);
+    toast(error?.message || '사이트 설정을 저장하지 못했어요.', 'error');
+    const errorLabel = document.getElementById('settings-state');
+    if (errorLabel) errorLabel.textContent = '저장 실패';
+  } finally {
+    buttons.forEach((button) => {
+      button.disabled = false;
+      button.textContent = '저장 (커밋)';
+    });
+  }
+}
+
 /* ── 시작 ─────────────────────────────────────────────── */
 let shortcutBound = false;
 function bindShortcut() {
@@ -1800,6 +2177,12 @@ function bindShortcut() {
       event.preventDefault();
       const saveAboutButton = document.getElementById('about-save');
       if (saveAboutButton && !saveAboutButton.disabled) saveAbout();
+      return;
+    }
+    if (state.view === 'settings') {
+      event.preventDefault();
+      const saveSettingsButton = document.getElementById('settings-save');
+      if (saveSettingsButton && !saveSettingsButton.disabled) saveSettings();
       return;
     }
     if (state.view !== 'editor') return;
@@ -1819,6 +2202,7 @@ function bindShortcut() {
       series: get('f-series'),
       draft: get('f-draft'),
       featured: get('f-featured'),
+      coupang: get('f-coupang'),
       body: get('f-body'),
     });
   });

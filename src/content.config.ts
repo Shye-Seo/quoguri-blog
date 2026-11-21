@@ -29,6 +29,11 @@ const blog = defineCollection({
     series: z.string().optional(),
     /** 검색 결과 제목을 따로 쓰고 싶을 때 (선택) */
     seoTitle: z.string().max(120).optional(),
+    /**
+     * 쿠팡 파트너스 제휴 고지 — true면 글 본문 맨 위에 공정위 공시 배너가 자동으로 붙습니다.
+     * 본문에 CoupangCard나 link.coupang.com 링크가 있으면 이 값을 켜지 않아도 자동으로 붙습니다.
+     */
+    coupang: z.boolean().default(false),
   }),
 });
 

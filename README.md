@@ -117,6 +117,34 @@ draft: false                 # true면 빌드에서 제외
   ```
 
   카드 하단에 공정위 문구(`이 포스팅은 쿠팡 파트너스 활동의 일환으로…`)가 **자동으로** 들어갑니다.
+  `CoupangCard`가 들어간 글은 본문 맨 위에도 공시 배너가 자동으로 붙어요. (아래 '리뷰 블록' 항목 참고)
+
+- **리뷰 블록 3종** — 한 줄 결론 · 장단점 · 가격 기준 (md·mdx 모두, 코드 펜스로 씁니다)
+
+  ````md
+  ```verdict
+  매일 8시간 타이핑하는 사람에게는 추천, 가끔 쓰는 사람에게는 과한 선택
+  ```
+
+  ```proscons
+  + 소리가 조용해서 밤에 작업해도 괜찮아요
+  + 키캡이 낮아 손목 받침 없이도 편해요
+  - 백라이트가 없어 어두운 방에서는 키가 안 보여요
+  ```
+
+  ```price
+  price: 89,000원
+  store: 쿠팡
+  date: 2026-11-21
+  note: 가격은 판매처 사정에 따라 달라질 수 있어요
+  ```
+  ````
+
+  `/admin/` 에디터 툴바의 **결론 · 장단점 · 가격** 버튼을 누르면 같은 문구가 커서 자리에 들어가고,
+  오른쪽 미리보기에도 사이트와 같은 모습으로 보입니다. 블록 안에서는 굵게·기울임·코드·링크(`[글자](/about/)`)를 쓸 수 있어요.
+
+- **쿠팡 공시 배너** — frontmatter에 `coupang: true`를 켜거나 본문에 `CoupangCard`·`link.coupang.com` 링크가 있으면
+  글 본문이 시작되기 전에 공시 배너가 자동으로 붙습니다. `/admin/` 글 편집기의 **쿠팡 파트너스 글** 체크박스로도 켤 수 있어요.
 
 - **표·인용·접기**는 일반 마크다운 그대로 씁니다. H2/H3 제목은 자동으로 목차(TOC)에 들어가요.
 
@@ -160,7 +188,10 @@ draft: false                 # true면 빌드에서 제외
 | 복제 / 삭제 / 주소 변경 | 복제는 임시저장 사본을 만들고, 삭제·주소 변경은 확인 후 처리 |
 | 대표 사진 업로드 | '내 컴퓨터에서 선택'으로 사진을 고르면 1600px 이하 JPEG로 줄여 `public/images/uploads/연/월/`에 커밋하고, 대표 사진 주소를 자동으로 채웁니다 |
 | 소개 페이지 탭 | `/about/`의 제목·소개 문단·글쓰기 기준·FAQ·수익화 고지·마지막 인사를 폼으로 고쳐 `src/content/pages/about.json`에 저장합니다 |
-| 단축키 | `Ctrl/⌘ + S` 저장 (글·소개 페이지 모두) |
+| 사이트 설정 탭 | 검색엔진 소유확인 코드, 문의 메일, GA4, 애드센스·쿠팡 ID, 소셜 링크를 `src/content/pages/site.json`에 저장하고 커밋합니다. 값이 비면 해당 태그·링크는 사이트에 나오지 않습니다 |
+| 리뷰 블록 버튼 | 에디터 툴바의 **결론 · 장단점 · 가격** 버튼으로 `verdict`·`proscons`·`price` 블록을 넣고, 미리보기에서 바로 확인합니다 |
+| 쿠팡 파트너스 글 토글 | 편집기의 **쿠팡 파트너스 글** 체크박스로 `coupang: true`를 켜면 본문 맨 위에 공시 배너가 자동으로 붙습니다 |
+| 단축키 | `Ctrl/⌘ + S` 저장 (글·소개 페이지·사이트 설정 모두) |
 
 #### 대표 사진 업로드가 하는 일
 
@@ -270,6 +301,9 @@ env:
 
 4. 다시 배포하면 `<head>`에 애드센스 스크립트가 자동 삽입되고, 글 본문 하단과 홈 하단에 광고가 나옵니다.
 
+저장소 Variables를 쓰지 않고 `/admin/` → **사이트 설정** 탭에 게시자 ID·슬롯을 넣어 커밋해도 됩니다.
+(저장소 Variables가 있으면 그 값이 우선합니다.)
+
 **동작 방식**
 
 - `PUBLIC_ADSENSE_CLIENT`가 `ca-pub-` + 숫자 16자리 형식일 때만 스크립트와 광고 슬롯이 렌더링됩니다.
@@ -284,7 +318,13 @@ env:
 2. 글에서 `<CoupangCard url="https://link.coupang.com/a/xxxxx" … />`로 넣습니다.
 3. `PUBLIC_COUPANG_PARTNER_ID` 변수를 넣어 두면 추후 자동 링크 조합에도 쓸 수 있습니다(현재 카드는 `url`을 그대로 사용).
 
-**공정위 문구**는 `src/config.ts`의 `coupang.disclosure`에 있고, 카드와 푸터에 자동으로 표시됩니다. 문구를 바꾸려면 이 파일만 고치면 됩니다.
+**공정위 문구**는 `src/lib/disclosure.js`의 `COUPANG_DISCLOSURE` 한 곳에서 관리하고, 카드·글 상단 배너·푸터·개인정보처리방침에 함께 쓰입니다.
+
+**글 상단 공시 배너**는 아래 중 하나만 해당하면 자동으로 붙습니다.
+
+- frontmatter `coupang: true`
+- 본문에 `<CoupangCard … />` 컴포넌트
+- 본문에 `link.coupang.com` 제휴 링크
 
 > 대가성 문구는 글 맨 위 또는 카드 바로 옆에 있어야 합니다. 카드 하단 문구와 함께, 협찬 글이라면 본문 첫머리에도 한 줄 적어 주세요.
 
@@ -302,14 +342,15 @@ env:
 - 글마다 `BlogPosting` + `BreadcrumbList`, 홈은 `WebSite` + `Organization`, 소개는 `FAQPage` 구조화 데이터
 - 화면에 보이는 빵부스러기(`홈 / 카테고리 / 글`), 글 하단 관련 글 내부 링크, 이전·다음 글
 - 검색 페이지(`/search/`) — 빌드 시 만든 정적 인덱스로 동작 (noindex)
-- 검색엔진 소유확인 메타 자리 — `src/config.ts`의 `verification.google` / `verification.naver`
-  또는 저장소 변수 `PUBLIC_GOOGLE_SITE_VERIFICATION` / `PUBLIC_NAVER_SITE_VERIFICATION`
-  (Actions 워크플로의 빌드 env에 이 두 변수를 추가하면 자동으로 들어갑니다)
+- 검색엔진 소유확인 메타 자리 — `/admin/` → **사이트 설정** 탭(또는 `src/content/pages/site.json`)의
+  `verification.google` / `verification.naver`, 저장소 변수 `PUBLIC_GOOGLE_SITE_VERIFICATION` / `PUBLIC_NAVER_SITE_VERIFICATION`
+  (저장소 변수가 없으면 site.json 값이 그대로 쓰입니다. 값이 비면 메타 태그가 출력되지 않습니다)
+- 방문 분석 — `/admin/` → **사이트 설정**의 GA4 측정 ID(`G-…`) 또는 `PUBLIC_GA4_ID`. 값을 넣으면 모든 페이지에 gtag가 들어갑니다
 
 **등록할 곳**
 
 1. [Google Search Console](https://search.google.com/search-console) → 속성 추가 → `sitemap-index.xml` 제출
-2. [네이버 서치어드바이저](https://searchadvisor.naver.com) → 사이트 등록 → 소유 확인(HTML 태그의 content 값을 `src/config.ts`의 `verification.naver`에 붙여 넣기) → 사이트맵 제출
+2. [네이버 서치어드바이저](https://searchadvisor.naver.com) → 사이트 등록 → 소유 확인(HTML 태그를 `/admin/` → 사이트 설정의 네이버 칸에 통째로 붙여 넣어도 됩니다) → 사이트맵 제출
 3. [다음 검색등록](https://search.daum.net/search/registration) — RSS(`/rss.xml`) 제출
 
 > 소유확인 값이 비어 있으면 메타 태그 자체가 출력되지 않습니다. 값을 넣고 다시 배포하면 `<head>`에 자동으로 들어갑니다.
@@ -333,17 +374,18 @@ quoguri-blog/
 │  ├─ content.config.ts           # 글 frontmatter 스키마
 │  ├─ content/blog/               # ★ 글 (.md / .mdx)
 │  ├─ content/pages/about.json    # ★ 소개 페이지 내용 (관리자에서 편집)
+│  ├─ content/pages/site.json     # ★ 소유확인·문의 메일·GA4·광고 ID (관리자 '사이트 설정')
 │  ├─ components/                 # Header · Footer · PostCard · AdSlot · CoupangCard
 │  ├─ layouts/BaseLayout.astro    # <head> SEO·OG·광고 스크립트
-│  ├─ lib/                        # 경로·날짜·글 목록 도우미
+│  ├─ lib/                        # 경로·날짜·글 목록 도우미, 리뷰 블록(review-blocks.js), 쿠팡 공시(disclosure.js)
 │  ├─ pages/                      # 홈·글·카테고리·검색·소개·개인정보·RSS·robots
 │  ├─ pages/admin/index.astro     # ★ 관리자 화면 (noindex)
-│  ├─ admin/                      # 관리자 로직 (github·frontmatter·markdown·seo·about·images)
+│  ├─ admin/                      # 관리자 로직 (github·frontmatter·markdown·seo·about·settings·images)
 │  └─ styles/global.css           # 디자인 토큰 (색·타이포·컴포넌트)
 ├─ scripts/
 │  ├─ generate-brand-assets.py    # OG 카드·앱 아이콘 생성
 │  └─ verify-dist.mjs             # 빌드 검증 (개인정보·SEO·robots·sitemap)
-├─ tests/                         # 관리자 모듈 · 소개 데이터 · 사진 업로드 테스트
+├─ tests/                         # 관리자 모듈 · 소개 데이터 · 사이트 설정 · 리뷰 블록 · 사진 업로드 테스트
 └─ package.json
 ```
 
@@ -355,9 +397,11 @@ quoguri-blog/
 | 카테고리 이름·색·설명 | `src/config.ts` |
 | 색상·글꼴·여백 | `src/styles/global.css` (`:root` 토큰, 키치 컴포넌트 레이어) |
 | 소개 페이지 내용 | `/admin/` → 소개 페이지 탭 또는 `src/content/pages/about.json` |
+| 소유확인·문의 메일·GA4·광고 ID | `/admin/` → 사이트 설정 탭 또는 `src/content/pages/site.json` |
+| 쿠팡 공시 문구 | `src/lib/disclosure.js`의 `COUPANG_DISCLOSURE` |
 | RSS 피드 미리보기 디자인 | `public/rss.xsl` |
 | 애드센스·쿠팡 ID | GitHub 저장소 Variables (또는 `src/config.ts` 기본값) |
-| 푸터 고지 문구 | `src/config.ts`의 `coupang.disclosure` |
+| 푸터 고지 문구 | `src/lib/disclosure.js`의 `COUPANG_DISCLOSURE` |
 | 홈 히어로 문구 | `src/pages/index.astro` |
 
 ---

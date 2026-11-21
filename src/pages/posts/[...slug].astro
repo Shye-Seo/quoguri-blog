@@ -4,8 +4,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import BrandMark from '../../components/BrandMark.astro';
-import { features, site } from '../../config';
+import { features, coupang, site } from '../../config';
 import { absoluteUrl, asset, formatDate, readingTime, withBase } from '../../lib/site';
+import { coupangNoticeHtml, needsCoupangDisclosure } from '../../lib/disclosure.js';
 import {
   categoryOf,
   getAdjacentPosts,
@@ -30,6 +31,9 @@ const { newer, older } = await getAdjacentPosts(post);
 const tocItems = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const minutes = readingTime(post.body ?? '');
 const updated = post.data.updatedDate;
+
+/** 쿠팡 파트너스 글은 본문이 시작되기 전에 공시 배너를 먼저 보여 줍니다. */
+const showCoupangNotice = needsCoupangDisclosure({ coupang: post.data.coupang, body: post.body });
 
 const canonical = absoluteUrl(`/posts/${post.id}/`);
 const title = post.data.seoTitle ?? post.data.title;
@@ -136,6 +140,7 @@ const jsonLd = [
 
     <div class="post-body-wrap">
       <div class="post-main">
+        {showCoupangNotice && <div set:html={coupangNoticeHtml(coupang.disclosure)} />}
         <div class="prose">
           <Content />
         </div>
@@ -160,7 +165,7 @@ const jsonLd = [
               <BrandMark size={44} class="author-box__mark" />
               <div>
                 <p class="author-box__name">{site.author.name} · {site.author.role}</p>
-                <p class="author-box__text">직접 써보고 직접 찍은 것만 기록해요. {site.nameEn} 블로그에서 만나요.</p>
+                <p class="author-box__text">직접 써보고 직접 검증한 것만 기록해요. {site.nameEn} 블로그에서 만나요.</p>
               </div>
             </div>
             <div class="share">

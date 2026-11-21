@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { unified } from '@astrojs/markdown-remark';
+import { remarkReviewBlocks } from './src/lib/remark-review-blocks.js';
 
 /**
  * 배포 위치에 따라 아래 두 값을 바꾸면 됩니다. (README '도메인 연결' 참고)
@@ -43,6 +44,8 @@ export default defineConfig({
   base,
   trailingSlash: 'ignore',
   integrations: [
+    // ```verdict / ```proscons / ```price 펜스를 리뷰 블록으로 바꾸는 플러그인은
+    // 아래 markdown.processor 에 등록하면 MDX도 그대로 물려받습니다.
     mdx(),
     sitemap({
       // 관리자·검색결과·404는 사이트맵에서 제외합니다.
@@ -68,6 +71,7 @@ export default defineConfig({
     processor: unified({
       gfm: true,
       smartypants: true,
+      remarkPlugins: [[remarkReviewBlocks, { base }]],
       rehypePlugins: [rehypeBasePaths(base)],
     }),
     shikiConfig: {

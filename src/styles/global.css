@@ -1379,6 +1379,179 @@ main {
   line-height: 1.6;
 }
 
+/* ── 쿠팡 파트너스 공시 배너 (글 본문 맨 위) ─────────── */
+.coupang-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 26px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed color-mix(in srgb, var(--brand) 32%, transparent);
+  background: color-mix(in srgb, var(--brand-soft) 55%, var(--bg-elev));
+}
+
+.coupang-notice__badge {
+  flex: none;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--brand-ink);
+  border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent);
+  border-radius: 999px;
+  padding: 2px 8px;
+  line-height: 1.5;
+  background: var(--bg-elev);
+}
+
+.coupang-notice p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+/* ── 리뷰 블록: 한 줄 결론 · 장단점 · 가격 ───────────── */
+.review-box {
+  margin-block: 1.8em;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-box__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.review-box__icon {
+  color: var(--sage);
+  font-size: 0.8rem;
+}
+
+.review-verdict {
+  border-left: 4px solid var(--sage);
+  background: var(--sage-soft);
+  border-color: color-mix(in srgb, var(--sage) 22%, transparent);
+}
+
+.review-verdict .review-box__label {
+  color: color-mix(in srgb, var(--sage) 70%, var(--ink));
+}
+
+.review-verdict__text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.06rem;
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: -0.02em;
+}
+
+.review-compare__head {
+  margin: 10px 0 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-compare__head--pro {
+  color: color-mix(in srgb, var(--sage) 75%, var(--ink));
+}
+
+.review-compare__head--con {
+  color: var(--brand-ink);
+}
+
+.review-compare__list {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.review-compare__list > li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.review-compare__list > li::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 800;
+}
+
+.review-compare__list--pro > li::before {
+  content: '＋';
+  color: var(--sage);
+}
+
+.review-compare__list--con > li::before {
+  content: '－';
+  color: var(--brand);
+}
+
+.review-compare__empty {
+  margin: 0 0 6px;
+  font-size: 0.84rem;
+  color: var(--ink-mute);
+}
+
+.review-price__value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-ink);
+}
+
+.review-price__meta {
+  margin: 6px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.review-price__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line-strong);
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--ink);
+}
+
+.review-price__note {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--ink-mute);
+}
+
 /* ── 글 하단 ─────────────────────────────────────────── */
 .post-footer {
   margin-top: 48px;

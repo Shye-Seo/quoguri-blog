@@ -4,7 +4,11 @@
  * 글을 저장할 때 쓰는 마크다운과 100% 같지는 않지만, 작성 중에
  * 제목·목록·표·링크·인용이 어떻게 보일지 바로 확인할 수 있게 해 줍니다.
  * (실제 사이트 렌더링은 Astro의 정식 마크다운 파이프라인이 담당합니다)
+ *
+ * ```verdict / ```proscons / ```price 펜스는 사이트와 같은 리뷰 블록으로
+ * 그립니다. (src/lib/review-blocks.js 를 공유)
  */
+import { isReviewBlock, renderReviewBlock } from '../lib/review-blocks.js';
 
 const escapeHtml = (value) =>
   String(value)
@@ -183,7 +187,6 @@ export function renderMarkdown(source) {
     codes.push({ lang, code });
     return `\n@@CODE${codes.length - 1}@@\n`;
   });
-
   // MDX 컴포넌트(<CoupangCard … />)는 안내 박스로 바꿉니다.
   text = text.replace(/<([A-Z][A-Za-z0-9]*)(?:\s[^>]*)?\/>/g, '\n@@COMP:$1@@\n');
   text = text.replace(/<([A-Z][A-Za-z0-9]*)(?:\s[^>]*)?>[\s\S]*?<\/\1>/g, '\n@@COMP:$1@@\n');
@@ -194,7 +197,10 @@ export function renderMarkdown(source) {
     .map((block) => {
       if (typeof block !== 'string') {
         const { lang, code } = codes[block.index] ?? { lang: '', code: '' };
-        return `<pre><code${lang ? ` class="language-${escapeHtml(lang)}"` : ''}>${escapeHtml(code.replace(/\n$/, ''))}</code></pre>`;
+        const source = code.replace(/\n$/, '');
+        // ```verdict / ```proscons / ```price → 사이트와 같은 리뷰 블록
+        if (isReviewBlock(lang)) return renderReviewBlock(lang, source, { base: '' });
+        return `<pre><code${lang ? ` class="language-${escapeHtml(lang)}"` : ''}>${escapeHtml(source)}</code></pre>`;
       }
       return block;
     })

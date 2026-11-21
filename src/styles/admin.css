@@ -1700,3 +1700,168 @@ textarea::placeholder {
 #about-deploy {
   margin-top: 16px;
 }
+
+/* ── 미리보기: 리뷰 블록·쿠팡 공시 배너 ─────────────── */
+.preview .review-box {
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+}
+
+.preview .review-box__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.preview .review-box__icon {
+  color: var(--ok);
+}
+
+.preview .review-verdict {
+  border-left: 4px solid var(--ok);
+  background: var(--ok-soft);
+}
+
+.preview .review-verdict .review-box__label {
+  color: var(--ok);
+}
+
+.preview .review-verdict__text {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.preview .review-compare__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.preview .review-compare__head--pro {
+  color: var(--ok);
+}
+
+.preview .review-compare__head--con {
+  color: var(--bad);
+}
+
+.preview .review-compare__list {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 3px;
+}
+
+.preview .review-compare__list > li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.preview .review-compare__list > li::before {
+  position: absolute;
+  left: 0;
+  font-weight: 800;
+}
+
+.preview .review-compare__list--pro > li::before {
+  content: '＋';
+  color: var(--ok);
+}
+
+.preview .review-compare__list--con > li::before {
+  content: '－';
+  color: var(--bad);
+}
+
+.preview .review-compare__empty {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  color: var(--mute);
+}
+
+.preview .review-price__value {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--brand-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.preview .review-price__meta {
+  margin: 6px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+}
+
+.preview .review-price__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.preview .review-price__note {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--mute);
+}
+
+.preview .coupang-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--brand) 35%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+}
+
+.preview .coupang-notice__badge {
+  flex: none;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--brand-ink);
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  border-radius: 999px;
+  padding: 1px 7px;
+  background: var(--panel);
+}
+
+.preview .coupang-notice p {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.write__toolbar [data-block] {
+  font-weight: 700;
+}
