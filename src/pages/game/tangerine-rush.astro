@@ -1,0 +1,135 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/game.css';
+import { absoluteUrl, withBase } from '../../lib/site';
+
+const title = '쿼구리 귤 받기';
+const description =
+  '60초 동안 떨어지는 귤과 황금별을 받고 폭탄을 피하는 아케이드 게임. 드래그·화살표·화면 버튼으로 움직이고 최고 기록은 브라우저에 저장돼요.';
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'VideoGame',
+    name: title,
+    url: absoluteUrl('/game/tangerine-rush/'),
+    description,
+    genre: ['아케이드', '캐주얼'],
+    gamePlatform: 'Web browser',
+    applicationCategory: 'Game',
+    operatingSystem: 'Any',
+    inLanguage: 'ko-KR',
+    isAccessibleForFree: true,
+    author: { '@type': 'Organization', name: '쿼구리', url: absoluteUrl('/') },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '홈', item: absoluteUrl('/') },
+      { '@type': 'ListItem', position: 2, name: '게임', item: absoluteUrl('/game/') },
+      { '@type': 'ListItem', position: 3, name: title, item: absoluteUrl('/game/tangerine-rush/') },
+    ],
+  },
+];
+---
+
+<BaseLayout title={title} description={description} jsonLd={jsonLd}>
+  <div class="container game-page">
+    <nav class="breadcrumb" aria-label="위치 경로">
+      <ol>
+        <li><a href={withBase('/')}>홈</a></li>
+        <li><a href={withBase('/game/')}>게임</a></li>
+        <li aria-current="page">{title}</li>
+      </ol>
+    </nav>
+
+    <header class="game-head">
+      <p class="section-label">game · 아케이드</p>
+      <h1 class="game-head__title">🍊 쿼구리 귤 받기</h1>
+      <p class="game-head__desc">
+        귤이 쏟아지는 60초예요. 바구니를 움직여 귤과 황금별을 받고, 폭탄은 흘려보내세요.
+      </p>
+    </header>
+
+    <section class="arcade" aria-label="쿼구리 귤 받기 게임">
+      <div class="arcade__hud">
+        <div class="hud-item">
+          <span class="hud-label">점수</span>
+          <strong class="hud-value" data-arcade-score>0</strong>
+        </div>
+        <div class="hud-item hud-item--combo" data-arcade-combo-wrap hidden>
+          <span class="hud-label">콤보</span>
+          <strong class="hud-value" data-arcade-combo>0</strong>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">남은 시간</span>
+          <strong class="hud-value"><span data-arcade-time>60</span><span class="hud-unit">초</span></strong>
+        </div>
+        <div class="hud-item hud-item--best">
+          <span class="hud-label">최고</span>
+          <strong class="hud-value" data-arcade-best>0</strong>
+        </div>
+        <button class="hud-sound" type="button" data-arcade-sound aria-pressed="true" aria-label="소리 끄기">🔊 소리</button>
+      </div>
+
+      <div class="arcade__stage">
+        <canvas
+          id="arcade-canvas"
+          data-arcade-canvas
+          data-state="idle"
+          data-score="0"
+          data-time-left="60"
+          data-basket-x="0.5"
+          aria-label="귤 받기 게임 화면"
+        ></canvas>
+
+        <div class="arcade__overlay" data-arcade-overlay>
+          <div class="arcade__panel">
+            <p class="arcade__panel-label" data-arcade-panel-label>60초 아케이드</p>
+            <h2 class="arcade__panel-title" data-arcade-panel-title>쿼구리 귤 받기</h2>
+            <p class="arcade__panel-text" data-arcade-panel-text>
+              귤 <strong>+10</strong> · 황금별 <strong>+50</strong> · 폭탄 <strong>−20</strong><br />
+              연속으로 받으면 콤보 보너스가 붙어요.
+            </p>
+            <button class="btn btn--primary arcade__start" type="button" data-arcade-start>시작하기</button>
+            <p class="arcade__panel-hint">← → 또는 화면을 드래그 · 스페이스로 시작</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="arcade__controls" aria-label="좌우 이동 버튼">
+        <button type="button" data-arcade-dir="left" aria-label="왼쪽으로">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M15 5 8 12l7 7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button type="button" data-arcade-dir="right" aria-label="오른쪽으로">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      <p class="arcade__status" data-arcade-status aria-live="polite">준비됐어요. 시작을 눌러 주세요.</p>
+    </section>
+
+    <section class="game-info">
+      <h2 class="game-info__title">이 게임에 대해</h2>
+      <p>
+        캔버스로 그린 작은 아케이드예요. 60초 동안 떨어지는 물건을 바구니로 받고, 폭탄에 맞으면 점수가 깎여요.
+        최고 기록은 서버가 아니라 이 브라우저 저장소에만 남습니다.
+      </p>
+      <ul class="game-info__list">
+        <li>귤 +10 · 황금별 +50 · 폭탄 −20, 놓친 귤은 콤보만 끊겨요.</li>
+        <li>5개마다 콤보 배수가 올라가요. 폭탄을 맞으면 콤보가 0이 돼요.</li>
+        <li>시작과 다시 하기는 스페이스바로도 돼요.</li>
+      </ul>
+      <p class="game-back"><a class="text-link" href={withBase('/game/')}>← 게임 전시관으로</a></p>
+    </section>
+  </div>
+
+  <script>
+    import '../../scripts/tangerine-game.js';
+  </script>
+</BaseLayout>

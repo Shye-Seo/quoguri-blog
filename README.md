@@ -1,16 +1,18 @@
 # 쿼구리 (quoguri) 블로그
 
-> 직접 써보고, 직접 찍은 것만 — 테크·데스크테리어 · 뷰티 · 여행·디카 · 일상 꿀팁
+> 직접 만들어 보고, 직접 써본 것만 — 테크·데스크테리어 · 뷰티 · 여행·디카 · 일상 꿀팁 · 웹 게임
 
 **Astro 7** 기반 정적 블로그입니다. GitHub Pages로 무료 배포되고, 나중에 `quoguri.com`을 연결할 수 있게 만들어 뒀어요.
-애드센스(Google AdSense)와 쿠팡 파트너스 수익화 요소, SEO(사이트맵·RSS·OG·구조화 데이터)가 처음부터 들어 있습니다.
+애드센스(Google AdSense)와 쿠팡 파트너스 수익화 요소, SEO(사이트맵·RSS·OG·구조화 데이터), 그리고 직접 만든 웹 게임 전시관(`/game/`)이 들어 있습니다.
 
 | 항목 | 내용 |
 | --- | --- |
 | 프레임워크 | Astro 7 (정적 출력) + MDX |
-| 스타일 | 키치 에디토리얼 — 버터 크림 바탕 + 팝 컬러 스티커 카드, 다크 모드 지원 |
-| 폰트 | 제목·UI `Paperlogy`(CDN), 본문 `Pretendard`(가변 다이내믹 서브셋) |
+| 스타일 | 에디토리얼 미니멀 — 따뜻한 오프화이트(`#FAF8F3`) + 1px 라인 카드 + 라일락·버터·세이지 포인트 |
+| 폰트 | 제목·워드마크 `Paperlogy`(CDN), 본문 `Pretendard`(가변 다이내믹 서브셋) |
+| 메뉴 | `blog · lab · game · about` — lab은 전체 기록 필터, game은 게임 전시관 |
 | 검색 | 헤더에서 가로로 펼쳐지는 인라인 검색 → `/search/?q=…` |
+| 게임 | `/game/quoguri-pet/`(다마고치 육성) · `/game/tangerine-rush/`(60초 아케이드) · 로그인 없이 플레이 |
 | 배포 | GitHub Actions → GitHub Pages (하루 1회 자동 재빌드 포함) |
 | 주소 | `.github/workflows/deploy.yml`의 `SITE_URL`·`BASE_PATH`로 결정 (도메인을 붙이면 그 주소가 기준이 됩니다) |
 | 관리자 | `/admin/` — 글쓰기 · 대표 사진 업로드 · 소개 페이지 편집을 브라우저에서 커밋 |
@@ -358,7 +360,38 @@ env:
 
 ---
 
-## 9. 폴더 구조
+## 9. 게임 전시관 (`/game/`)
+
+직접 만든 웹 게임을 모아 두는 공간입니다. 전시 페이지(`/game/`)와 게임별 플레이 페이지가 **`src/data/games.ts` 한 파일**에서 나옵니다.
+
+```
+src/data/games.ts        게임 목록 (이름·소개·특징·조작법·색·NEW 배지)
+src/pages/game/index.astro   전시 페이지 — 데이터를 순회해 쇼케이스 카드 생성
+src/pages/game/<slug>.astro  게임 하나의 플레이 페이지
+src/scripts/<slug>-game.js   게임 로직 (프레임워크 없이 브라우저에서 바로 실행)
+src/styles/game.css          게임 화면 스타일
+```
+
+**새 게임을 추가할 때**
+
+1. `src/data/games.ts`의 `games` 배열에 한 칸 추가합니다 (`slug`, `title`, `summary`, `features`, `preview`, `accent`, `intro`, `controls`, `tags` …).
+2. `src/pages/game/<slug>.astro`를 만들고 `game.css`와 스크립트를 불러옵니다.
+3. 스크립트는 `src/scripts/`에 두고, 상태는 `localStorage`에 게임별 키로 저장합니다.
+
+그러면 전시 페이지 카드, 홈 하단 미리보기, 사이트맵, 구조화 데이터가 한 번에 따라 늘어납니다. 미리보기 그림은 `src/components/game/GamePreview.astro`의 `kind`를 늘려 그립니다(외부 이미지 없이 SVG).
+
+**지금 들어 있는 게임**
+
+| 주소 | 게임 | 저장 키 |
+| --- | --- | --- |
+| `/game/quoguri-pet/` | 쿼구리 키우기 — 밥주기·놀아주기·재우기·쓰다듬기, 게이지가 실제 시간에 맞춰 변함 | `quoguri-pet-v1` |
+| `/game/tangerine-rush/` | 쿼구리 귤 받기 — 60초, 귤 +10 · 황금별 +50 · 폭탄 −20, 콤보 배수 | `quoguri-tangerine-best-v1` |
+
+두 게임 모두 로그인 없이 바로 시작하고, 모바일 터치와 PC 키보드(키우기: F·N·S·P / 귤 받기: ← →·스페이스)를 함께 지원합니다. 서버로 보내는 값은 없습니다.
+
+---
+
+## 10. 폴더 구조
 
 ```
 quoguri-blog/
@@ -375,13 +408,16 @@ quoguri-blog/
 │  ├─ content/blog/               # ★ 글 (.md / .mdx)
 │  ├─ content/pages/about.json    # ★ 소개 페이지 내용 (관리자에서 편집)
 │  ├─ content/pages/site.json     # ★ 소유확인·문의 메일·GA4·광고 ID (관리자 '사이트 설정')
-│  ├─ components/                 # Header · Footer · PostCard · AdSlot · CoupangCard
+│  ├─ data/games.ts               # ★ 게임 전시관 데이터 (게임 추가는 여기 한 칸)
+│  ├─ components/                 # Header · Footer · LogCard · FilterBar · PostCard · Marquee · game/GamePreview
 │  ├─ layouts/BaseLayout.astro    # <head> SEO·OG·광고 스크립트
 │  ├─ lib/                        # 경로·날짜·글 목록 도우미, 리뷰 블록(review-blocks.js), 쿠팡 공시(disclosure.js)
-│  ├─ pages/                      # 홈·글·카테고리·검색·소개·개인정보·RSS·robots
+│  ├─ pages/                      # 홈·lab·글·카테고리·검색·소개·개인정보·RSS·robots
+│  ├─ pages/game/                 # 게임 전시관(index) + 게임별 플레이 페이지
 │  ├─ pages/admin/index.astro     # ★ 관리자 화면 (noindex)
 │  ├─ admin/                      # 관리자 로직 (github·frontmatter·markdown·seo·about·settings·images)
-│  └─ styles/global.css           # 디자인 토큰 (색·타이포·컴포넌트)
+│  ├─ scripts/                    # pet-game.js · tangerine-game.js · record-filter.js
+│  └─ styles/global.css           # 디자인 토큰 (색·타이포·컴포넌트) + game.css (게임 화면)
 ├─ scripts/
 │  ├─ generate-brand-assets.py    # OG 카드·앱 아이콘 생성
 │  └─ verify-dist.mjs             # 빌드 검증 (개인정보·SEO·robots·sitemap)
@@ -395,7 +431,9 @@ quoguri-blog/
 | --- | --- |
 | 블로그 소개 문구·SNS 링크·연락처 | `src/config.ts` |
 | 카테고리 이름·색·설명 | `src/config.ts` |
-| 색상·글꼴·여백 | `src/styles/global.css` (`:root` 토큰, 키치 컴포넌트 레이어) |
+| 색상·글꼴·여백 | `src/styles/global.css` (`:root` 토큰과 컴포넌트 레이어) |
+| 게임 추가 | `src/data/games.ts`에 한 칸 + `src/pages/game/<slug>.astro` + `src/scripts/<slug>-game.js` |
+| 게임 화면 디자인 | `src/styles/game.css` |
 | 소개 페이지 내용 | `/admin/` → 소개 페이지 탭 또는 `src/content/pages/about.json` |
 | 소유확인·문의 메일·GA4·광고 ID | `/admin/` → 사이트 설정 탭 또는 `src/content/pages/site.json` |
 | 쿠팡 공시 문구 | `src/lib/disclosure.js`의 `COUPANG_DISCLOSURE` |
@@ -406,7 +444,7 @@ quoguri-blog/
 
 ---
 
-## 10. 자주 겪는 문제
+## 11. 자주 겪는 문제
 
 | 증상 | 원인 / 해결 |
 | --- | --- |
@@ -421,7 +459,7 @@ quoguri-blog/
 
 ---
 
-## 11. 참고
+## 12. 참고
 
 - 디자인·문구는 쿼구리 브랜드 기준으로 작성돼 있습니다. 색을 바꾸려면 `src/styles/global.css`의 `:root` 변수만 고치면 전체에 반영됩니다.
 - 현재 글 4편은 형식을 보여 주는 **샘플 글**입니다. 실제 운영 전에 자유롭게 고치거나 지우고 본인 글로 채우세요.

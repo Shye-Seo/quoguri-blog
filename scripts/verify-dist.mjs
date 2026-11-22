@@ -207,6 +207,43 @@ for (const name of COPY_PAGES) {
   if (/<span[^>]*>\s*직접 찍은 사진만\s*<\/span>/.test(html)) problems.push(`${name} — 사진이 없는데 '직접 찍은 사진만' 문구`);
 }
 
+/* ── 5-6. 게임 전시관 · 실제 플레이 페이지 ─────────────── */
+const gameRoot = path.join(DIST, 'game');
+if (!existsSync(gameRoot)) {
+  problems.push('game/ 전시 페이지 없음');
+} else {
+  const gameIndexPath = path.join(gameRoot, 'index.html');
+  const gameIndexHtml = existsSync(gameIndexPath) ? readFileSync(gameIndexPath, 'utf8') : '';
+  if (!gameIndexHtml) problems.push('game/index.html 없음');
+
+  const gameDirs = readdirSync(gameRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+  if (gameDirs.length < 2) problems.push(`game/ 아래 게임 페이지가 ${gameDirs.length}개뿐입니다`);
+
+  for (const slug of gameDirs) {
+    const file = path.join(gameRoot, slug, 'index.html');
+    if (!existsSync(file)) {
+      problems.push(`game/${slug}/index.html 없음`);
+      continue;
+    }
+    const html = readFileSync(file, 'utf8');
+    if (!/data-arcade-canvas|data-pet-device/.test(html)) {
+      problems.push(`game/${slug}/index.html — 게임 화면 마커(data-arcade-canvas·data-pet-device) 없음`);
+    }
+    if (!/_astro\/[^"']+\.js/.test(html)) problems.push(`game/${slug}/index.html — 게임 스크립트 번들 없음`);
+    if (gameIndexHtml && !gameIndexHtml.includes(`/game/${slug}/`)) {
+      problems.push(`game/index.html — ${slug} 쇼케이스 링크 없음`);
+    }
+  }
+
+  for (const file of sitemapFiles) {
+    const xml = readFileSync(path.join(sitemapDir, file), 'utf8');
+    if (!/<urlset/.test(xml)) continue; // sitemap-index.xml 은 목록만 담습니다.
+    if (!/\/game\//.test(xml)) problems.push(`${file} — 게임 페이지가 사이트맵에 없음`);
+  }
+}
+
 /* ── 6. 공개 페이지에 관리자 링크가 없는지 ─────────────── */
 for (const file of pages) {
   const name = rel(file);
