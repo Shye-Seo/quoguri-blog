@@ -1,0 +1,68 @@
+---
+/**
+ * 기록 리스트 카드 (가로형)
+ *
+ * LOG-008 | 썸네일 | 카테고리 · 날짜 / 제목 / 한 줄 요약 | 글 읽기 →
+ * 카테고리·태그 필터가 data-cat / data-tags 를 읽어 보여 줄 카드를 고릅니다.
+ */
+import type { Post } from '../lib/posts';
+import { categoryOf } from '../lib/posts';
+import { asset, formatDateShort, withBase } from '../lib/site';
+import CoverTile from './CoverTile.astro';
+
+interface Props {
+  post: Post;
+  /** LOG-001 형식의 순번 */
+  logNo: string;
+  eager?: boolean;
+  /** 제일 최근 글에 NEW 배지 */
+  isNew?: boolean;
+}
+
+const { post, logNo, eager = false, isNew = false } = Astro.props;
+const category = categoryOf(post);
+const href = withBase(`/posts/${post.id}/`);
+---
+
+<a
+  class="log"
+  href={href}
+  style={`--accent:${category.accent}`}
+  data-log-item
+  data-cat={post.data.category}
+  data-tags={post.data.tags.join('|')}
+>
+  <span class="log__no">LOG-{logNo}</span>
+  <span class="log__thumb">
+    {
+      post.data.cover ? (
+        <img
+          src={asset(post.data.cover)}
+          alt=""
+          width="168"
+          height="168"
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+          style="width:100%;height:100%;object-fit:cover"
+        />
+      ) : (
+        <CoverTile category={category} index={logNo} variant="row" />
+      )
+    }
+  </span>
+  <span class="log__body">
+    <span class="log__meta">
+      <span class="log__cat">{category.short}</span>
+      <span class="log__date">{formatDateShort(post.data.pubDate)}</span>
+      {isNew && <span class="log__badge">NEW</span>}
+    </span>
+    <h3 class="log__title">{post.data.title}</h3>
+    <span class="log__desc">{post.data.description}</span>
+  </span>
+  <span class="log__more">
+    글 읽기
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </span>
+</a>

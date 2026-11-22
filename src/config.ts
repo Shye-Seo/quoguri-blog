@@ -40,18 +40,20 @@ const pick = (envKey: string, fileValue?: string) => read(envKey) || saved(fileV
 export const site = {
   name: '쿼구리',
   nameEn: 'quoguri',
-  tagline: '직접 써보고, 직접 검증한 것만',
+  tagline: '직접 만들어 보고, 직접 써본 것만',
   description:
-    '테크·데스크테리어, 뷰티, 여행·디카, 일상 꿀팁까지 — 직접 써보고 검증한 것만 귀엽고 솔직하게 기록하는 쿼구리(quoguri)의 블로그예요.',
+    '테크·데스크테리어, 뷰티, 여행·디카, 일상 꿀팁, 그리고 직접 만든 웹 게임까지 — 직접 만들어 보고 직접 써본 것만 기록하는 쿼구리(quoguri)의 기록장이에요.',
   /** 홈 메타 키워드 (네이버는 참고, 구글은 사실상 무시) */
-  keywords: ['쿼구리', 'quoguri', '리뷰 블로그', '데스크테리어', '빈티지 디카', '화장품 후기', '일상 꿀팁'],
+  keywords: ['쿼구리', 'quoguri', '리뷰 블로그', '데스크테리어', '빈티지 디카', '화장품 후기', '웹 게임', '미니 게임', '일상 꿀팁'],
   lang: 'ko',
   locale: 'ko_KR',
   author: {
     /** 운영자 실명·계정은 어디에도 적지 않습니다. 브랜드명만 사용합니다. */
     name: '쿼구리',
-    role: '기록하는 쿼카',
+    role: '만들고 기록하는 쿼카',
   },
+  /** 히어로 아래 롤링 띠에 흐르는 단어들 */
+  marquee: ['quoguri lab', 'vibe coding', 'daily log', 'web games', 'review', 'desk setup', 'vintage digicam'],
   /** /admin/ → 사이트 설정에서 넣습니다. 비어 있으면 mailto 링크를 아예 그리지 않습니다. */
   contactEmail: pick('PUBLIC_CONTACT_EMAIL', siteFile.contactEmail),
   /** 비워 두면 화면에 나오지 않습니다. (운영자 개인 계정 주소는 넣지 마세요) */
@@ -85,7 +87,8 @@ export const categories = [
     label: '테크·데스크테리어',
     short: '테크',
     emoji: '🖥️',
-    accent: '#0E9F79',
+    /** 에디토리얼 팔레트: 세이지 · 라일락 · 클레이 · 미스트 */
+    accent: '#7C9379',
     blurb: '맥북·태블릿·키보드, 책상 위의 물건들',
   },
   {
@@ -93,7 +96,7 @@ export const categories = [
     label: '뷰티·리뷰',
     short: '뷰티',
     emoji: '🧴',
-    accent: '#FF4D67',
+    accent: '#B3A0E8',
     blurb: '써보고 남는 것만 남기는 솔직 후기',
   },
   {
@@ -101,7 +104,7 @@ export const categories = [
     label: '여행·디카',
     short: '여행',
     emoji: '📷',
-    accent: '#2F7DF6',
+    accent: '#C9925E',
     blurb: '빈티지 디카와 함께한 동네 여행',
   },
   {
@@ -109,7 +112,7 @@ export const categories = [
     label: '일상·꿀팁',
     short: '일상',
     emoji: '🌿',
-    accent: '#F2A007',
+    accent: '#8FA79C',
     blurb: '살림·기록·생활 속 작은 발견',
   },
 ] as const;
@@ -151,15 +154,17 @@ export const analytics = {
 /* ── 기타 ───────────────────────────────────────────────── */
 export const features = {
   /** 홈에 보여 줄 최근 글 개수 */
-  recentCount: 9,
+  recentCount: 6,
   /** 관련 글 개수 */
   relatedCount: 3,
   /** 글 상단 읽기 진행 막대 */
   readingProgress: true,
 };
 
+/** 상단 한 줄 메뉴 — blog · lab · game · about */
 export const nav = [
-  { href: '/', label: '홈' },
-  { href: '/categories/', label: '카테고리' },
-  { href: '/about/', label: '쿼구리 소개' },
+  { href: '/', label: 'blog' },
+  { href: '/lab/', label: 'lab' },
+  { href: '/game/', label: 'game' },
+  { href: '/about/', label: 'about' },
 ] as const;

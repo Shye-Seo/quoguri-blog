@@ -76,7 +76,7 @@ import { withBase } from '../lib/site';
           .map(
             (item) => `
             <a class="list-item" href="${base}${item.path.replace(/^\//, '')}">
-              <span class="list-item__media" style="display:grid;place-items:center;font-size:1.4rem;background:var(--bg-soft)">${item.emoji}</span>
+              <span class="list-item__media" style="display:grid;place-items:center;font-size:1.4rem;background:var(--bg-tint)">${item.emoji}</span>
               <span>
                 <span class="chip chip--category">${escapeHtml(item.category)}</span>
                 <span class="list-item__title" style="display:block">${escapeHtml(item.title)}</span>

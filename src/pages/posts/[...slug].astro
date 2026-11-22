@@ -24,7 +24,7 @@ const { post } = Astro.props as { post: Post };
 const { Content, headings } = await render(post);
 
 const allPosts = await getPublishedPosts();
-const indexNo = String(allPosts.findIndex((item) => item.id === post.id) + 1).padStart(2, '0');
+const indexNo = `LOG-${String(allPosts.length - allPosts.findIndex((item) => item.id === post.id)).padStart(3, '0')}`;
 const category = categoryOf(post);
 const related = await getRelatedPosts(post, features.relatedCount);
 const { newer, older } = await getAdjacentPosts(post);
@@ -153,7 +153,7 @@ const jsonLd = [
               post.data.tags.length > 0 ? (
                 <div class="chip-row" aria-label="태그">
                   {post.data.tags.map((tag) => (
-                    <a class="chip" href={withBase(`/search/?q=${encodeURIComponent(tag)}`)}>
+                    <a class="chip" href={withBase(`/lab/?tag=${encodeURIComponent(tag)}`)}>
                       #{tag}
                     </a>
                   ))}

@@ -2,8 +2,9 @@
 /**
  * 타이포그래피 커버
  *
- * 사진(또는 그림)이 없는 글은 카테고리 색과 번호로 만든 커버를 씁니다.
- * 이미지 파일을 만들지 않아도 카드·히어로·목록이 비어 보이지 않습니다.
+ * 사진이 없는 글은 카테고리 색 타일로 채웁니다.
+ * 작은 썸네일(카드·목록)은 그림 없이 이모지 한 개만, 히어로 크기에서는
+ * 카테고리 이름과 quoguri 마크를 함께 보여 줍니다.
  */
 import type { categories } from '../config';
 
@@ -11,12 +12,10 @@ interface Props {
   category: (typeof categories)[number];
   /** 01, 02 … 목록에서의 순번 */
   index?: string;
-  /** 커버 안에 글 제목을 크게 넣고 싶을 때 (거의 쓰지 않음) */
-  title?: string;
   variant?: 'card' | 'hero' | 'row';
 }
 
-const { category, index, title, variant = 'card' } = Astro.props;
+const { category, index, variant = 'card' } = Astro.props;
 ---
 
 <span
@@ -24,14 +23,15 @@ const { category, index, title, variant = 'card' } = Astro.props;
   style={`--accent:${category.accent}`}
   aria-hidden="true"
 >
-  <span class="cover__top">
-    <span class="cover__cat">{category.short}</span>
-    {title && <span class="cover__title">{title}</span>}
-  </span>
-  <span class="cover__badge" aria-hidden="true">{category.emoji}</span>
-  <span class="cover__foot">
-    <span class="cover__rule"></span>
-    <span class="cover__mark">quoguri</span>
-  </span>
-  {index && <span class="cover__no">{index}</span>}
+  {variant === 'hero' && <span class="cover__cat">{category.short}</span>}
+  <span class="cover__badge">{category.emoji}</span>
+  {
+    variant === 'hero' && (
+      <span class="cover__foot">
+        <span class="cover__rule"></span>
+        <span class="cover__mark">quoguri</span>
+      </span>
+    )
+  }
+  {variant === 'hero' && index && <span class="cover__no">{index}</span>}
 </span>

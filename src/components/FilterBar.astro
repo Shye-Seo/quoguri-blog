@@ -1,0 +1,63 @@
+---
+/**
+ * 카테고리·태그 필터
+ *
+ * 링크로도 동작합니다(자바스크립트가 없으면 /lab/?cat=tech 로 이동).
+ * lab 페이지에서는 data-filter-in-place 가 켜져 클릭 시 목록을 바로 걸러 냅니다.
+ *   · 카테고리: a[data-filter="cat"][data-value="tech"]
+ *   · 태그:     a[data-filter="tag"][data-value="AI"]
+ * 선택된 칩은 is-active 클래스로 표시합니다.
+ */
+import { categories } from '../config';
+import { withBase } from '../lib/site';
+
+interface Props {
+  counts: Record<string, number>;
+  total: number;
+  tags: { tag: string; count: number }[];
+  /** 필터 링크가 가리킬 페이지 (기본 /lab/) */
+  base?: string;
+  /** true면 이 페이지 안에서 바로 걸러 냅니다 */
+  inPlace?: boolean;
+}
+
+const { counts, total, tags, base = '/lab/', inPlace = false } = Astro.props;
+const href = (query: string) => withBase(query ? `${base}?${query}` : base);
+---
+
+<div
+  class="filter-bar"
+  data-filter-bar
+  data-filter-in-place={inPlace ? 'true' : undefined}
+  data-filter-base={withBase(base)}
+>
+  <a class="filter-chip is-active" href={href('')} data-filter="all">
+    전체
+    <span class="filter-chip__count">{total}</span>
+  </a>
+  {
+    categories.map((category) => (
+      <a
+        class="filter-chip"
+        href={href(`cat=${category.slug}`)}
+        data-filter="cat"
+        data-value={category.slug}
+      >
+        {category.short}
+        <span class="filter-chip__count">{counts[category.slug] ?? 0}</span>
+      </a>
+    ))
+  }
+  {
+    tags.map((item) => (
+      <a
+        class="filter-chip filter-chip--tag"
+        href={href(`tag=${encodeURIComponent(item.tag)}`)}
+        data-filter="tag"
+        data-value={item.tag}
+      >
+        #{item.tag}
+      </a>
+    ))
+  }
+</div>

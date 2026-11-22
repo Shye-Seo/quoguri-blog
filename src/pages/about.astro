@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import BrandMark from '../components/BrandMark.astro';
 import { categories, coupang, site } from '../config';
 import { absoluteUrl, withBase } from '../lib/site';
 import about from '../content/pages/about.json';
@@ -66,13 +65,10 @@ const jsonLd = [
     <div class="page-prose">
       <div class="prose">
         <div class="about-plate">
-          <BrandMark size={56} class="about-plate__mark" />
-          <div>
-            <p class="about-plate__name">
-              {about.plate.name} <span>{about.plate.nameEn}</span>
-            </p>
-            <p class="about-plate__tag">{about.plate.tagline || site.tagline}</p>
-          </div>
+          <p class="about-plate__name">
+            {about.plate.name} <span>{about.plate.nameEn}</span>
+          </p>
+          <p class="about-plate__tag">{about.plate.tagline || site.tagline}</p>
         </div>
 
         {

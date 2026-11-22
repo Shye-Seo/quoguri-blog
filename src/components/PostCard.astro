@@ -30,7 +30,7 @@ const altText = post.data.coverAlt ?? `${post.data.title} 대표 이미지`;
           decoding="async"
         />
       ) : (
-        <CoverTile category={category} index={index} />
+        <CoverTile category={category} index={index} variant="hero" />
       )
     }
   </a>
