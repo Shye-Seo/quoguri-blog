@@ -916,7 +916,8 @@ function renderEditor() {
   let timer = null;
   const update = () => {
     const bodyText = body.value;
-    const showCoupangNotice = Boolean(coupangToggle?.checked) || needsCoupangDisclosure({ body: bodyText });
+    // 공시 배너는 프런트매터 '쿠팡 파트너스 글' 체크와 똑같이 움직입니다.
+    const showCoupangNotice = needsCoupangDisclosure({ coupang: Boolean(coupangToggle?.checked) });
     const notice = showCoupangNotice ? coupangNoticeHtml(COUPANG_DISCLOSURE) : '';
     preview.innerHTML = bodyText.trim()
       ? `${notice}${renderMarkdown(bodyText)}`

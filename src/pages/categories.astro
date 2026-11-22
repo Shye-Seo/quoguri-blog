@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CoverTile from '../components/CoverTile.astro';
 import { categories, site } from '../config';
-import { absoluteUrl, formatDateShort, readingTime, withBase } from '../lib/site';
+import { absoluteUrl, formatDateShort, withBase } from '../lib/site';
 import { categoryOf, countByCategory, getPublishedPosts } from '../lib/posts';
 
 const posts = await getPublishedPosts();
@@ -92,7 +92,7 @@ const jsonLd = [
                     <h3 class="list-item__title">{post.data.title}</h3>
                     <p class="list-item__desc">{post.data.description}</p>
                     <p class="list-item__meta">
-                      {formatDateShort(post.data.pubDate)} · {readingTime(post.body ?? '')}분 읽기
+                      {formatDateShort(post.data.pubDate)}
                     </p>
                   </div>
                 </a>

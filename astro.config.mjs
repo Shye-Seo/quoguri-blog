@@ -3,6 +3,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { unified } from '@astrojs/markdown-remark';
 import { remarkReviewBlocks } from './src/lib/remark-review-blocks.js';
+import { rehypeTableWrap } from './src/lib/rehype-table-wrap.js';
 
 /**
  * 배포 위치에 따라 아래 두 값을 바꾸면 됩니다. (README '도메인 연결' 참고)
@@ -72,7 +73,8 @@ export default defineConfig({
       gfm: true,
       smartypants: true,
       remarkPlugins: [[remarkReviewBlocks, { base }]],
-      rehypePlugins: [rehypeBasePaths(base)],
+      // 표를 가로 스크롤 래퍼로 감싸 본문 폭에서 표가 잘리지 않게 합니다.
+      rehypePlugins: [rehypeTableWrap, rehypeBasePaths(base)],
     }),
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark-dimmed' },

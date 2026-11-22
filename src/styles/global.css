@@ -1159,23 +1159,43 @@ main {
   font-size: inherit;
 }
 
-.prose table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
+/* 표 — 잘림 방지
+   ─────────────────────────────────────────────────────
+   예전에는 표에 display:block + overflow-x:auto 를 걸어 스크롤을 만들었는데,
+   display:block 을 주면 표가 '블록 상자'가 되어 칸 너비가 내용만큼 줄어들고
+   (표 오른쪽이 잘린 것처럼 보임) 테두리·머리글 배경도 칸마다 끊겼습니다.
+   이제는 rehype 플러그인(src/lib/rehype-table-wrap.js)이 본문 표를
+   .table-scroll 래퍼로 감싸고, 표 자체는 원래의 table 레이아웃을 유지합니다. */
+.prose .table-scroll {
+  margin-block: 1.7em;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  overflow: hidden;
-  display: block;
+  background: var(--bg-elev);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose table {
+  width: 100%;
+  min-width: 100%;
+  display: table;
+  border-collapse: collapse;
+  font-size: clamp(0.82rem, 0.78rem + 0.4vw, 0.9rem);
 }
 
 .prose th,
 .prose td {
-  padding: 10px 14px;
+  padding: clamp(7px, 1.6vw, 10px) clamp(9px, 2.4vw, 14px);
   border-bottom: 1px solid var(--line);
   text-align: left;
-  white-space: nowrap;
+  vertical-align: top;
+  /* 한글은 단어 중간에서 끊지 않고, 긴 주소·토큰만 필요할 때 끊습니다. */
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.55;
 }
 
 .prose thead th {
@@ -1183,6 +1203,7 @@ main {
   font-weight: 700;
   font-size: 0.84rem;
   color: var(--ink-soft);
+  white-space: normal;
 }
 
 .prose tbody tr:last-child td {

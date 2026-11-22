@@ -45,16 +45,6 @@ export function isoDate(date: Date): string {
   return date.toISOString();
 }
 
-/** 한국어 기준 분당 약 500자로 계산한 읽기 시간 */
-export function readingTime(body: string): number {
-  const text = body
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/[#>*_`~\-|]/g, ' ');
-  const chars = text.replace(/\s+/g, '').length;
-  return Math.max(1, Math.round(chars / 500));
-}
-
 export function plainText(body: string, limit = 160): string {
   const text = body
     .replace(/```[\s\S]*?```/g, ' ')

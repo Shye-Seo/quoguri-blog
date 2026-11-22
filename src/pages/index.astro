@@ -5,7 +5,7 @@ import AdSlot from '../components/AdSlot.astro';
 import BrandMark from '../components/BrandMark.astro';
 import CoverTile from '../components/CoverTile.astro';
 import { categories, features, site } from '../config';
-import { absoluteUrl, formatDate, readingTime, withBase } from '../lib/site';
+import { absoluteUrl, formatDate, withBase } from '../lib/site';
 import { categoryOf, countByCategory, getFeaturedPost, getPublishedPosts } from '../lib/posts';
 
 const posts = await getPublishedPosts();
@@ -141,7 +141,6 @@ const jsonLd = [
               <p class="featured__desc">{featured.data.description}</p>
               <div class="post-meta post-meta--start">
                 <time datetime={featured.data.pubDate.toISOString()}>{formatDate(featured.data.pubDate)}</time>
-                <span class="post-meta__dot">{readingTime(featured.body ?? '')}분 읽기</span>
               </div>
               <a class="featured__more" href={withBase(`/posts/${featured.id}/`)}>글 읽으러 가기 →</a>
             </div>

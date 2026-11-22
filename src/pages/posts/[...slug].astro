@@ -5,7 +5,7 @@ import PostCard from '../../components/PostCard.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import BrandMark from '../../components/BrandMark.astro';
 import { features, coupang, site } from '../../config';
-import { absoluteUrl, asset, formatDate, readingTime, withBase } from '../../lib/site';
+import { absoluteUrl, asset, formatDate, withBase } from '../../lib/site';
 import { coupangNoticeHtml, needsCoupangDisclosure } from '../../lib/disclosure.js';
 import {
   categoryOf,
@@ -30,7 +30,6 @@ const related = await getRelatedPosts(post, features.relatedCount);
 const { newer, older } = await getAdjacentPosts(post);
 const bothNav = Boolean(newer && older);
 const tocItems = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
-const minutes = readingTime(post.body ?? '');
 const updated = post.data.updatedDate;
 
 /** 쿠팡 파트너스 글은 본문이 시작되기 전에 공시 배너를 먼저 보여 줍니다. */
@@ -118,7 +117,6 @@ const jsonLd = [
       <div class="post-meta">
         <span>{site.author.name}</span>
         <time datetime={post.data.pubDate.toISOString()} class="post-meta__dot">{formatDate(post.data.pubDate)}</time>
-        <span class="post-meta__dot">{minutes}분 읽기</span>
         {updated && <span class="post-meta__dot">{formatDate(updated)} 수정</span>}
       </div>
       {post.data.series && <p class="post-header__series">시리즈 · {post.data.series}</p>}

@@ -116,10 +116,12 @@ test('일반 코드 블록은 그대로 코드로 보인다', () => {
   assert.ok(!html.includes('review-'));
 });
 
-test('쿠팡 공시: 플래그·카드·제휴 링크를 모두 잡는다', () => {
+test('쿠팡 공시: 프런트매터 플래그가 켜진 글에만 붙는다', () => {
   assert.equal(needsCoupangDisclosure({ coupang: true }), true);
-  assert.equal(needsCoupangDisclosure({ body: '<CoupangCard name="키보드" />' }), true);
-  assert.equal(needsCoupangDisclosure({ body: '링크: https://link.coupang.com/a/xyz' }), true);
+  // 본문에 제휴 카드·링크가 있어도 프런트매터가 꺼져 있으면 배너는 붙지 않는다.
+  assert.equal(needsCoupangDisclosure({ coupang: false, body: '<CoupangCard name="키보드" />' }), false);
+  assert.equal(needsCoupangDisclosure({ body: '링크: https://link.coupang.com/a/xyz' }), false);
+  assert.equal(needsCoupangDisclosure({ body: '<CoupangCard name="키보드" />' }), false);
   assert.equal(needsCoupangDisclosure({ body: 'https://www.coupang.com/vp/products/1' }), false);
   assert.equal(needsCoupangDisclosure({}), false);
 });

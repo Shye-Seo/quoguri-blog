@@ -1,7 +1,7 @@
 ---
 import type { Post } from '../lib/posts';
 import { categoryOf } from '../lib/posts';
-import { asset, formatDateShort, readingTime, withBase } from '../lib/site';
+import { asset, formatDateShort, withBase } from '../lib/site';
 import CoverTile from './CoverTile.astro';
 
 interface Props {
@@ -42,7 +42,6 @@ const altText = post.data.coverAlt ?? `${post.data.title} 대표 이미지`;
     <p class="post-card__desc">{post.data.description}</p>
     <div class="post-card__foot">
       <time datetime={post.data.pubDate.toISOString()}>{formatDateShort(post.data.pubDate)}</time>
-      <span>{readingTime(post.body ?? '')}분 읽기</span>
     </div>
   </div>
 </article>
